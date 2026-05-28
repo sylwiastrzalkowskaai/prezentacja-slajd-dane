@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f0f2f7;padding:16px;font-size:12px;color:#1a1a2e}
+h1{text-align:center;font-size:16px;font-weight:800;margin-bottom:3px}
+.subtitle{text-align:center;font-size:11px;color:#666;margin-bottom:14px}
+
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{padding:8px 13px;border-radius:8px 8px 0 0;cursor:pointer;font-size:11px;font-weight:600;background:#dde1ee;color:#555;border:2px solid transparent;border-bottom:none}
+.tab.active{background:white;color:#1a1a2e;border-color:#c5cae0}
+.tab:hover:not(.active){background:#c8cddf}
+.panel{display:none;background:white;border-radius:0 8px 8px 8px;border:2px solid #c5cae0;padding:18px}
+.panel.active{display:block}
+
+.sec-title{font-size:13px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px;border-bottom:2px solid #f0f2f7;padding-bottom:6px}
+.badge{font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px}
+
+/* VERDICT BANNER */
+.verdict-banner{border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+.verdict-icon{font-size:36px;flex-shrink:0}
+.verdict-text h2{font-size:15px;font-weight:800}
+.verdict-text p{font-size:11px;margin-top:4px;line-height:1.6}
+
+/* MAPOWANIE ŹRÓDEŁ */
+.map-table{width:100%;border-collapse:collapse}
+.map-table th{background:#1e3a8a;color:#fff;padding:7px 9px;font-size:10px;font-weight:700;text-align:left;letter-spacing:.3px}
+.map-table td{padding:7px 9px;border-bottom:1px solid #f0f2f7;font-size:10px;vertical-align:top;line-height:1.4}
+.map-table tr:hover td{background:#fafbff}
+.src-name{font-weight:700;color:#1e3a8a}
+.q-bar{height:8px;border-radius:4px;display:inline-block;vertical-align:middle;margin-right:4px}
+.q-label{font-weight:700;font-size:10px;vertical-align:middle}
+.qg{color:#16a34a}.qm{color:#d97706}.qb{color:#dc2626}
+.owner-biz{background:#dbeafe;color:#1e3a8a;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;display:inline-block;margin:1px}
+.owner-tech{background:#f3e8ff;color:#581c87;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;display:inline-block;margin:1px}
+.prio-crit{background:#fee2e2;color:#991b1b;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;white-space:nowrap}
+.prio-high{background:#fef9c3;color:#854d0e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;white-space:nowrap}
+.prio-ok{background:#dcfce7;color:#14532d;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;white-space:nowrap}
+
+/* AUDYT 7 KRYTERIÓW */
+.audit-table{width:100%;border-collapse:collapse}
+.audit-table th{background:#374151;color:#fff;padding:7px 9px;font-size:10px;font-weight:700;text-align:left}
+.audit-table td{padding:7px 9px;border-bottom:1px solid #f0f2f7;font-size:10px;vertical-align:middle}
+.audit-table tr:hover td{background:#fafbff}
+.score-cell{font-size:14px;font-weight:800;text-align:center}
+.s1{color:#dc2626}.s2{color:#ef4444}.s3{color:#f59e0b}.s4{color:#22c55e}.s5{color:#16a34a}
+.bar-wrap{height:7px;background:#f0f2f7;border-radius:4px;overflow:hidden;width:80px;display:inline-block;vertical-align:middle}
+.bar-fill{height:100%;border-radius:4px}
+
+/* 3 PROBLEMY */
+.prob-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.prob-card{border-radius:10px;overflow:hidden}
+.prob-head{padding:12px 14px;color:white}
+.prob-num{font-size:28px;font-weight:900;opacity:.25;float:right;line-height:1}
+.prob-title{font-size:12px;font-weight:800}
+.prob-tag{font-size:9px;opacity:.85;margin-top:2px}
+.prob-body{background:white;padding:12px 14px;border:2px solid;border-top:none;border-radius:0 0 10px 10px}
+.prob-desc{font-size:11px;color:#333;line-height:1.6;margin-bottom:8px}
+.prob-impact{font-size:10px;font-weight:700;margin-bottom:6px}
+.prob-fix{font-size:10px;font-weight:600;display:flex;gap:4px}
+.prob-fix::before{content:"🛠";flex-shrink:0}
+
+/* PLAN 30/60/90 */
+.plan-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.plan-card{border-radius:10px;overflow:hidden}
+.plan-head{padding:12px 14px;color:white}
+.plan-days{font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:2px}
+.plan-title{font-size:13px;font-weight:800}
+.plan-goal{font-size:10px;opacity:.85;margin-top:2px}
+.plan-body{background:white;padding:12px 14px;border:2px solid;border-top:none;border-radius:0 0 10px 10px}
+.plan-item{font-size:11px;color:#333;padding:4px 0;border-bottom:1px solid #f5f5f5;display:flex;gap:6px;line-height:1.4}
+.plan-item:last-child{border-bottom:none}
+.plan-item::before{content:"▸";flex-shrink:0;margin-top:1px}
+.plan-kpi{margin-top:8px;font-size:10px;font-weight:700}
+
+/* OWNERSHIP */
+.own-table{width:100%;border-collapse:collapse}
+.own-table th{background:#14532d;color:#fff;padding:7px 9px;font-size:10px;font-weight:700;text-align:left}
+.own-table td{padding:7px 9px;border-bottom:1px solid #f0f2f7;font-size:10px;vertical-align:top}
+.own-table tr:hover td{background:#fafbff}
+
+/* STAT BOXES */
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.stat-box{flex:1;min-width:100px;background:#f8f9ff;border-radius:8px;padding:9px;text-align:center;border:1px solid #e0e4f0}
+.stat-num{font-size:20px;font-weight:800}
+.stat-lbl{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.4px}
+.stat-sub{font-size:10px;color:#555;margin-top:2px}
+
+.warn-box{background:#fef3c7;border-left:4px solid #d97706;border-radius:0 8px 8px 0;padding:10px 14px;font-size:11px;line-height:1.7;color:#451a03;margin-top:10px}
+.green-box{background:#f0fdf4;border-left:4px solid #16a34a;border-radius:0 8px 8px 0;padding:10px 14px;font-size:11px;line-height:1.7;color:#14532d;margin-top:10px}
+.red-box{background:#fef2f2;border-left:4px solid #dc2626;border-radius:0 8px 8px 0;padding:10px 14px;font-size:11px;line-height:1.7;color:#450a0a;margin-bottom:14px}
+
+@media(max-width:600px){.prob-grid,.plan-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>Komentarz o danych — AutoPartner Max S.A.</h1>
+<p class="subtitle">Inwentaryzacja i mapowanie · Audyt jakości 7 kryteriami · 3 największe problemy · Właściciele danych · Plan szybkiego fix 30/60/90 dni</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="show(0)">📊 Ogólna ocena</div>
+  <div class="tab" onclick="show(1)">🗂️ Mapa źródeł danych</div>
+  <div class="tab" onclick="show(2)">🔬 Audyt jakości (7 kryteriów)</div>
+  <div class="tab" onclick="show(3)">🚨 3 największe problemy</div>
+  <div class="tab" onclick="show(4)">👤 Właściciele danych</div>
+  <div class="tab" onclick="show(5)">🛠️ Plan 30/60/90 dni</div>
+</div>
+
+<!-- ===== TAB 0: OGÓLNA OCENA ===== -->
+<div class="panel active" id="p0">
+  <div class="verdict-banner" style="background:#fef3c7;border:2px solid #d97706">
+    <div class="verdict-icon">⚠️</div>
+    <div class="verdict-text">
+      <h2 style="color:#92400e">Stan danych: NIEGOTOWE NA AI — ale nie beznadziejne</h2>
+      <p style="color:#451a03">Firma deklaruje "mamy dane" i faktycznie ma ich dużo — w 6+ systemach (ERP, CRM, WMS, PIM, TMS, Excel). Problem polega na tym, że są <strong>rozproszone, niespójne, bez właścicieli i bez jednej definicji kluczowych KPI</strong>. To klasyczny przypadek: <em>dużo danych, mało wiedzy</em>. Bez podjęcia działań naprawczych zaawansowane projekty AI (Prognoza Popytu, Dashboard Zarządczy) nie wyjdą. <strong>3 piloty są możliwe — ale wymagają wstępnego przygotowania konkretnych zbiorów przed startem.</strong></p>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-num" style="color:#d97706">2,9/5</div><div class="stat-lbl">Średnia jakość danych</div><div class="stat-sub">7 kryteriów, 6 źródeł</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#dc2626">6+</div><div class="stat-lbl">Systemów źródłowych</div><div class="stat-sub">ERP, CRM, WMS, PIM, TMS, Excel</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#dc2626">0</div><div class="stat-lbl">Właścicieli danych (formalnie)</div><div class="stat-sub">nikt nie odpowiada za nic</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#dc2626">0</div><div class="stat-lbl">Data Warehouse</div><div class="stat-sub">brak centralnego repozytorium</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#f59e0b">~40%</div><div class="stat-lbl">Kompletność katalogu PIM</div><div class="stat-sub">top SKU bez atrybutów</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#16a34a">TAK</div><div class="stat-lbl">Dane dla 3 pilotów</div><div class="stat-sub">po wstępnym czyszczeniu</div></div>
+  </div>
+
+  <div class="sec-title"><span>🎯</span> Gotowość danych dla każdego z 3 pilotów</div>
+  <table class="map-table">
+    <tr style="background:#f3f4f6">
+      <th>Pilot</th><th>Gotowość danych</th><th>Co trzeba zrobić przed startem</th><th>Szacowany czas</th>
+    </tr>
+    <tr>
+      <td class="src-name">🚨 Pilot #1 Bramka Marżowa</td>
+      <td><span class="prio-ok">✅ PRAWIE GOTOWE</span></td>
+      <td>Zmapować koszty logistyki TMS→ERP (estymacyjnie). Ustalić progi marży z CFO. Dane o cenach zakupu i rabatach w ERP — dostępne od zaraz.</td>
+      <td style="font-weight:700;color:#16a34a">1–2 tygodnie</td>
+    </tr>
+    <tr>
+      <td class="src-name">📬 Pilot #2 Follow-up LLM</td>
+      <td><span class="prio-high">⚠️ WYMAGA PRACY</span></td>
+      <td>Standaryzacja statusów ofert w CRM (Bartek + Rafał muszą ustalić słownik: wysłana / wygrana / utracona — cena / utracona — dostępność). Bez tego timer nie wie kiedy odpalić follow-up.</td>
+      <td style="font-weight:700;color:#d97706">2–3 tygodnie</td>
+    </tr>
+    <tr>
+      <td class="src-name">📦 Pilot #3 Stany ERP API</td>
+      <td><span class="prio-ok">✅ GOTOWE</span></td>
+      <td>Stany ERP są aktualne — to ich podstawowa funkcja. Weryfikacja API z Pawłem IT. Cache Redis konfiguracja. Brak czyszczenia danych wymagany.</td>
+      <td style="font-weight:700;color:#16a34a">3–5 dni</td>
+    </tr>
+  </table>
+
+  <div class="warn-box">
+    <strong>Główna pułapka danych AutoPartner Max:</strong> Firma mówi "mamy dane" i to prawda — ale mamy dane ERP, dane CRM, dane WMS i dane w Excelach handlowców, które <strong>nigdy ze sobą nie rozmawiają</strong>. Nikt nie zna prawdziwej rentowności klienta, bo koszty zwrotów są w ERP, koszty logistyki w TMS, a rabaty w CRM — i nikt tego nie łączy. To nie jest problem braku danych. To problem braku <em>jednej wersji prawdy</em>.
+  </div>
+</div>
+
+<!-- ===== TAB 1: MAPA ŹRÓDEŁ ===== -->
+<div class="panel" id="p1">
+  <div class="sec-title"><span>🗂️</span> Inwentaryzacja i mapowanie źródeł danych — AutoPartner Max</div>
+  <p style="font-size:11px;color:#555;margin-bottom:10px">Wg metodologii kursu: jakie dane mamy · skąd pochodzą · kto ich używa · kto odpowiada · czy są dobrej jakości · co trzeba poprawić.</p>
+
+  <table class="map-table">
+    <tr>
+      <th>Źródło</th><th>Co zawiera</th><th>Kto używa</th><th>Gdzie przechowywane</th><th>Jakość</th><th>Krytyczne problemy</th><th>Priorytet</th>
+    </tr>
+    <tr>
+      <td class="src-name">🏢 ERP</td>
+      <td>Historia zamówień · ceny zakupu i sprzedaży · rabaty · stany (częściowo) · faktury · dane dostawców</td>
+      <td>Sprzedaż · CFO · Logistyka</td>
+      <td>On-premise / chmura hybrydowa</td>
+      <td><div class="bar-wrap"><div class="bar-fill" style="width:60%;background:#f59e0b"></div></div> <span class="s3">3/5</span></td>
+      <td>Koszty logistyki niepołączone z TMS. Zwroty nie powiązane z ofertami. Dostępność API — do weryfikacji.</td>
+      <td><span class="prio-high">⚠️ WYSOKI</span></td>
+    </tr>
+    <tr>
+      <td class="src-name">👤 CRM</td>
+      <td>Dane klientów · historia kontaktów · statusy ofert (niekompletne) · przypisani handlowcy · reklamacje (częściowo)</td>
+      <td>Sprzedaż · Manager · Analytics</td>
+      <td>SaaS CRM (prawdopodobnie Salesforce lub HubSpot)</td>
+      <td><div class="bar-wrap"><div class="bar-fill" style="width:40%;background:#ef4444"></div></div> <span class="s2">2/5</span></td>
+      <td>Statusy ofert niestandardowe per handlowiec. Powody utraty ofert wpisywane przypadkowo. Część ofert poza CRM (Excel).</td>
+      <td><span class="prio-crit">🔴 KRYTYCZNY</span></td>
+    </tr>
+    <tr>
+      <td class="src-name">📦 WMS</td>
+      <td>Stany magazynowe · lokalizacja produktów · rotacja · historia braków · czasy kompletacji · zwroty</td>
+      <td>Logistyka · Zakupy</td>
+      <td>On-premise WMS (7 centrów dystrybucji)</td>
+      <td><div class="bar-wrap"><div class="bar-fill" style="width:80%;background:#22c55e"></div></div> <span class="s4">4/5</span></td>
+      <td>Dane dobre lokalnie. Brak widoku ogólnopolskiego realtime. Zwroty często niepowiązane z oryginalnym zamówieniem.</td>
+      <td><span class="prio-ok">✅ NISKI</span></td>
+    </tr>
+    <tr>
+      <td class="src-name">🏷️ PIM (Katalog)</td>
+      <td>1,8 mln indeksów · 420k aktywnych SKU · opisy · numery OE · zamienniki · zdjęcia · atrybuty techniczne</td>
+      <td>Sprzedaż · E-commerce · Zakupy</td>
+      <td>System PIM (prawdopodobnie Akeneo lub custom)</td>
+      <td><div class="bar-wrap"><div class="bar-fill" style="width:36%;background:#dc2626"></div></div> <span class="s2">1,8/5</span></td>
+      <td>Opisy niespójne (różne formaty od dostawców). Numery OE niepełne. Zamienniki błędnie połączone. Duplikaty SKU. Marta nie ma zasobów do czyszczenia.</td>
+      <td><span class="prio-crit">🔴 KRYTYCZNY</span></td>
+    </tr>
+    <tr>
+      <td class="src-name">🚚 TMS</td>
+      <td>Koszty dostaw · trasy · czasy · flota 950 aut · przesunięcia między magazynami · pilne dostawy</td>
+      <td>Logistyka · Operacje</td>
+      <td>Zewnętrzny system TMS / Excel (częściowo)</td>
+      <td><div class="bar-wrap"><div class="bar-fill" style="width:60%;background:#f59e0b"></div></div> <span class="s3">3/5</span></td>
+      <td>Koszty dostawy per zamówienie NIE są połączone z ERP — to bloker dla Bramki Marżowej. TMS może nie mieć nowoczesnego API.</td>
+      <td><span class="prio-crit">🔴 KRYTYCZNY</span></td>
+    </tr>
+    <tr>
+      <td class="src-name">📋 Excel handlowców</td>
+      <td>Lokalne listy zamienników · notatki o klientach · oferty poza CRM · lokalna wiedza o preferencjach</td>
+      <td>Handlowcy (indywidualnie)</td>
+      <td>Lokalne dyski / SharePoint (niekontrolowane)</td>
+      <td><div class="bar-wrap"><div class="bar-fill" style="width:20%;background:#dc2626"></div></div> <span class="s1">1/5</span></td>
+      <td>Poza systemem — niemożliwe do użycia przez AI. Wiedza odejdzie razem z handlowcem. Brak kontroli wersji. Duplikaty z CRM.</td>
+      <td><span class="prio-crit">🔴 KRYTYCZNY</span></td>
+    </tr>
+  </table>
+
+  <div class="green-box" style="margin-top:12px">
+    <strong>✅ Co już jest dobrym fundamentem:</strong> Historia zamówień z ERP (3+ lata) jest solidna i wystarczy do scoringu klientów oraz pierwszych modeli ML. Stany WMS są aktualne i dostępne. E-commerce B2B zbiera nieużywane dane o wyszukiwaniach klientów — bogata kopalnia dla rekomendacji.
+  </div>
+</div>
+
+<!-- ===== TAB 2: AUDYT JAKOŚCI ===== -->
+<div class="panel" id="p2">
+  <div class="sec-title"><span>🔬</span> Audyt jakości danych — 7 kryteriów z materiałów kursu</div>
+  <p style="font-size:11px;color:#555;margin-bottom:10px">Skala: 1 = bardzo źle · 3 = średnio · 5 = bardzo dobrze. Ocena per źródło danych i per kryterium.</p>
+
+  <table class="audit-table">
+    <tr>
+      <th>Kryterium</th><th>ERP</th><th>CRM</th><th>WMS</th><th>PIM/Katalog</th><th>TMS</th><th>Komentarz</th>
+    </tr>
+    <tr>
+      <td style="font-weight:700">1. Kompletność<br/><span style="font-size:9px;font-weight:400;color:#888">Brak dziur w polach?</span></td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s2">2</td>
+      <td class="score-cell s4">4</td>
+      <td class="score-cell s1">1</td>
+      <td class="score-cell s3">3</td>
+      <td style="font-size:10px;color:#555">PIM ma ~40% SKU bez kompletnych atrybutów. CRM: statusy ofert niekompletne, powody utraty prawie zawsze "inne".</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">2. Aktualność<br/><span style="font-size:9px;font-weight:400;color:#888">Up-to-date?</span></td>
+      <td class="score-cell s4">4</td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s4">4</td>
+      <td class="score-cell s2">2</td>
+      <td class="score-cell s3">3</td>
+      <td style="font-size:10px;color:#555">WMS i ERP aktualne. PIM aktualizowany z opóźnieniem od dostawców (nowe modele aut nie pojawiają się przez tygodnie). CRM: dane klientów odświeżane nieregularnie.</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">3. Spójność<br/><span style="font-size:9px;font-weight:400;color:#888">Różne systemy mówią to samo?</span></td>
+      <td class="score-cell s2">2</td>
+      <td class="score-cell s2">2</td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s1">1</td>
+      <td class="score-cell s2">2</td>
+      <td style="font-size:10px;color:#555">KRYTYCZNY GAP: dostępność produktu różni się między ERP a e-commerce. Ten sam SKU opisany inaczej przez różnych dostawców w PIM. TMS nie jest zsynchronizowany z ERP — koszty logistyki niewidoczne przy marży.</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">4. Dokładność<br/><span style="font-size:9px;font-weight:400;color:#888">Odpowiadają rzeczywistości?</span></td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s2">2</td>
+      <td class="score-cell s4">4</td>
+      <td class="score-cell s2">2</td>
+      <td class="score-cell s3">3</td>
+      <td style="font-size:10px;color:#555">Zamienniki w PIM błędnie połączone (~20%). CRM: powody utraty ofert wpisywane "na chybił trafił" — dane bezużyteczne analitycznie. WMS fizycznie zgodny z systemem.</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">5. Unikalność<br/><span style="font-size:9px;font-weight:400;color:#888">Dane się nie dublują?</span></td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s2">2</td>
+      <td class="score-cell s4">4</td>
+      <td class="score-cell s1">1</td>
+      <td class="score-cell s4">4</td>
+      <td style="font-size:10px;color:#555">PIM: ten sam produkt pod wieloma kodami od różnych dostawców. CRM: duplikaty klientów przy wielu oddziałach. Oferty częściowo w CRM, częściowo w Excelach.</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">6. Dostępność<br/><span style="font-size:9px;font-weight:400;color:#888">Łatwo pozyskać?</span></td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s4">4</td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s2">2</td>
+      <td style="font-size:10px;color:#555">TMS może nie mieć nowoczesnego REST API — eksport ręczny lub starszy protokół. ERP i CRM mają API ale dokumentacja słaba. WMS API dostępne — Paweł potwierdził.</td>
+    </tr>
+    <tr>
+      <td style="font-weight:700">7. Zgodność (RODO)<br/><span style="font-size:9px;font-weight:400;color:#888">Regulacje spełnione?</span></td>
+      <td class="score-cell s4">4</td>
+      <td class="score-cell s3">3</td>
+      <td class="score-cell s5">5</td>
+      <td class="score-cell s5">5</td>
+      <td class="score-cell s4">4</td>
+      <td style="font-size:10px;color:#555">B2B — niższe ryzyko RODO niż B2C. Dane kontaktowe klientów wymagają weryfikacji zgód. Przy LLM API: dane klientów przez serwery OpenAI/Claude → DPA wymagana. WMS i PIM brak danych osobowych.</td>
+    </tr>
+    <tr style="background:#f8f9ff;font-weight:700">
+      <td>ŚREDNIA</td>
+      <td class="score-cell s3">3,1</td>
+      <td class="score-cell s2">2,4</td>
+      <td class="score-cell s4">4,0 ✅</td>
+      <td class="score-cell s2">2,1 🔴</td>
+      <td class="score-cell s3">3,0</td>
+      <td style="font-size:10px;color:#555">WMS = najlepszy fundament. PIM = największy problem. CRM = krytyczny dla pilota #2.</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ===== TAB 3: 3 NAJWIĘKSZE PROBLEMY ===== -->
+<div class="panel" id="p3">
+  <div class="sec-title"><span>🚨</span> 3 największe problemy z danymi</div>
+  <p style="font-size:11px;color:#555;margin-bottom:12px">Wg metodologii kursu: po audycie jakości identyfikujemy 3 główne problemy, które blokują projekty AI lub zakłócają jakość wyników.</p>
+
+  <div class="prob-grid">
+    <div class="prob-card">
+      <div class="prob-head" style="background:#dc2626">
+        <span class="prob-num">1</span>
+        <div class="prob-title">Brak jednej wersji prawdy</div>
+        <div class="prob-tag">6 systemów mówi różne rzeczy</div>
+      </div>
+      <div class="prob-body" style="border-color:#fca5a5">
+        <div class="prob-desc">8 systemów źródłowych mówi różne rzeczy. Dostępność produktu różni się między ERP a e-commerce. Marża klienta nie jest policzalna, bo koszty logistyki są w TMS, rabaty w CRM, a zwroty w ERP — nikt tego nie łączy. Każdy dział ma własną wersję raportu. Handlowcy nie ufają centralnym danym i mają rację.</div>
+        <div class="prob-impact" style="color:#dc2626">💥 Wpływ na piloty: Alert Marżowy bez kosztów logistyki jest nieprecyzyjny. Follow-up bez czystych statusów CRM odpala w złym momencie. AI uczone na niespójnych danych daje niespójne wyniki.</div>
+        <div class="prob-fix">Mapowanie kosztów TMS→ERP (estymacja) + definicja "jednej wersji prawdy" dla marży z Joanną (CFO) + API layer jako wspólna warstwa danych.</div>
+      </div>
+    </div>
+
+    <div class="prob-card">
+      <div class="prob-head" style="background:#dc2626">
+        <span class="prob-num">2</span>
+        <div class="prob-title">Katalog PIM w krytycznym stanie</div>
+        <div class="prob-tag">1,8 mln SKU — 40% bez atrybutów</div>
+      </div>
+      <div class="prob-body" style="border-color:#fca5a5">
+        <div class="prob-desc">1,8 mln indeksów w katalogu — ale opisy niespójne (różne formaty od różnych dostawców), numery OE niepełne, zamienniki błędnie połączone, kompatybilność z modelami aut niekompletna. Ten sam produkt ma 3 różne nazwy. Marta (Product Data) nie ma zasobów do czyszczenia. Handlowcy tworzą lokalne listy zamienników w Excelach — wiedza poza systemem.</div>
+        <div class="prob-impact" style="color:#dc2626">💥 Wpływ na piloty: AI Asystent Ofertowy (Faza 2) nie zadziała bez czystego katalogu. Błędne zamienniki = reklamacje = utrata klienta = gorszy wynik niż bez AI.</div>
+        <div class="prob-fix">LLM-assisted cleansing top 50k SKU (AI może pomóc czyścić dane!). TecDoc API jako zewnętrzne źródło prawdy dla kompatybilności. Marta jako formalny Data Owner katalogu.</div>
+      </div>
+    </div>
+
+    <div class="prob-card">
+      <div class="prob-head" style="background:#d97706">
+        <span class="prob-num">3</span>
+        <div class="prob-title">Dane poza systemem — w głowach i Excelach</div>
+        <div class="prob-tag">Wiedza odejdzie z handlowcem</div>
+      </div>
+      <div class="prob-body" style="border-color:#fcd34d">
+        <div class="prob-desc">Najlepsi handlowcy wiedzą który zamiennik jest dobry, co klient lubi kupować i jaki rabat ma sens. Ta wiedza nigdy nie trafiła do systemu. Powody utraty ofert wpisywane losowo ("brak decyzji klienta" = wszystko). Część ofert nigdy nie trafia do CRM. Lokalne oddziały mają własne obejścia procesów. Brak danych = brak możliwości trenowania dobrych modeli.</div>
+        <div class="prob-impact" style="color:#d97706">💥 Wpływ na piloty: Scoring konwersji dla Follow-up będzie słaby bez prawdziwych przyczyn utraty. Model uczy się na szumie, nie na sygnale. Lead scoring bez historii jakości leadów = zgadywanie.</div>
+        <div class="prob-fix">Standaryzacja statusów CRM (Bartek + Rafał: słownik w tygodniu 1). Przeniesienie lokalnych list zamienników do PIM. Zachęty dla handlowców do uzupełniania CRM (Rafał egzekwuje).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="red-box">
+    <strong>Dlaczego dane zazwyczaj nie są gotowe na AI (wg kursu):</strong> "Większość danych jest brudna" — to standard, na to się szykujcie. Dane są nieopisane, chaotyczne, trudno dostępne. Wybieramy 3 największe problemy i robimy <em>szybki fix</em>. Albo pod konkretny projekt (bardziej fokusowany), albo generalny. Motywacja do czyszczenia danych przychodzi razem z projektem — i właśnie dlatego pilot musi być pierwszy.
+  </div>
+</div>
+
+<!-- ===== TAB 4: WŁAŚCICIELE DANYCH ===== -->
+<div class="panel" id="p4">
+  <div class="sec-title"><span>👤</span> Proponowana struktura właścicielska danych</div>
+  <p style="font-size:11px;color:#555;margin-bottom:10px">Wg metodologii kursu: każde źródło danych powinno mieć właściciela biznesowego + wsparcie techniczne. Dziś w AutoPartner Max <strong>nikt formalnie nie odpowiada za żadne dane.</strong></p>
+
+  <table class="own-table">
+    <tr>
+      <th>Źródło danych</th><th>Właściciel biznesowy</th><th>Wsparcie techniczne</th><th>Priorytet</th><th>Główny problem do rozwiązania</th>
+    </tr>
+    <tr>
+      <td class="src-name">Katalog produktów (PIM)</td>
+      <td><span class="owner-biz">Marta — Product Data</span></td>
+      <td><span class="owner-tech">Paweł — IT / PIM admin</span></td>
+      <td><span class="prio-crit">🔴 KRYTYCZNY</span></td>
+      <td style="font-size:10px">Niespójne opisy, brak OE, błędne zamienniki, brak właściciela zmian → AI dobiera złe części</td>
+    </tr>
+    <tr>
+      <td class="src-name">Dane ofert / sprzedaży (CRM)</td>
+      <td><span class="owner-biz">Rafał — Dyrektor Sprzedaży</span></td>
+      <td><span class="owner-tech">Bartek — Analytics / CRM admin</span></td>
+      <td><span class="prio-crit">🔴 KRYTYCZNY</span></td>
+      <td style="font-size:10px">Niekompletne statusy, powody utraty ofert bezwartościowe, część ofert poza CRM → Follow-up odpala losowo</td>
+    </tr>
+    <tr>
+      <td class="src-name">Rentowność klienta (ERP + CRM + TMS)</td>
+      <td><span class="owner-biz">Joanna — CFO</span></td>
+      <td><span class="owner-tech">Bartek — Analytics + Paweł — IT</span></td>
+      <td><span class="prio-crit">🔴 KRYTYCZNY</span></td>
+      <td style="font-size:10px">Brak definicji marży netto end-to-end (koszty logistyki niepołączone) → Alert Marżowy nieprecyzyjny</td>
+    </tr>
+    <tr>
+      <td class="src-name">Stany magazynowe (WMS)</td>
+      <td><span class="owner-biz">Wojtek — Logistyka</span></td>
+      <td><span class="owner-tech">Paweł — IT / WMS admin</span></td>
+      <td><span class="prio-ok">✅ NISKI</span></td>
+      <td style="font-size:10px">Dobre lokalnie, brak widoku ogólnopolskiego realtime → API layer w Pilocie #3 rozwiązuje</td>
+    </tr>
+    <tr>
+      <td class="src-name">Historia sprzedaży dla ML (ERP)</td>
+      <td><span class="owner-biz">Rafał — Sprzedaż / Bartek — Analytics</span></td>
+      <td><span class="owner-tech">Paweł — IT + (przyszły) Data Engineer</span></td>
+      <td><span class="prio-high">⚠️ ŚREDNI</span></td>
+      <td style="font-size:10px">Dane są, ale zwroty zaburzają obraz realnego popytu → wymagają czyszczenia przed ML (Faza 2–3)</td>
+    </tr>
+    <tr>
+      <td class="src-name">Koszty transportu (TMS)</td>
+      <td><span class="owner-biz">Elżbieta — Operacje</span></td>
+      <td><span class="owner-tech">Paweł — IT + vendor TMS</span></td>
+      <td><span class="prio-crit">🔴 KRYTYCZNY</span></td>
+      <td style="font-size:10px">Koszt dostawy per zamówienie nie jest dostępny w ERP → Bramka Marżowa działa na szacunkach, nie danych</td>
+    </tr>
+  </table>
+
+  <div class="warn-box" style="margin-top:12px">
+    <strong>Kluczowe działanie organizacyjne:</strong> Mianowanie właścicieli danych musi nastąpić <strong>w tygodniu 1 projektu</strong> — na spotkaniu z zarządem. Bez formalnej odpowiedzialności czyszczenie danych będzie przeciągać się w nieskończoność, bo nikt nie będzie się czuł odpowiedzialny. Rafał musi wiedzieć, że jest właścicielem jakości CRM. Marta — że jest właścicielem katalogu. To decyzja zarządcza, nie techniczna.
+  </div>
+</div>
+
+<!-- ===== TAB 5: PLAN 30/60/90 ===== -->
+<div class="panel" id="p5">
+  <div class="sec-title"><span>🛠️</span> Plan szybkiego fix — 30 / 60 / 90 dni</div>
+  <p style="font-size:11px;color:#555;margin-bottom:12px">Wg metodologii kursu: 30 dni = diagnoza i szybkie porządki · 60 dni = poprawa jakości w jednym obszarze · 90 dni = prosty system zarządzania danymi. Skupiamy się na danych blokujących 3 piloty.</p>
+
+  <div class="plan-grid">
+    <div class="plan-card">
+      <div class="plan-head" style="background:#dc2626">
+        <div class="plan-days">PIERWSZE 30 DNI</div>
+        <div class="plan-title">Diagnoza i szybkie porządki</div>
+        <div class="plan-goal">Cel: odblokować start pilotów #1 i #2</div>
+      </div>
+      <div class="plan-body" style="border-color:#fca5a5">
+        <div class="plan-item"><strong>Tydzień 1: Mianowanie właścicieli danych</strong> — spotkanie zarząd, formalna lista: Rafał→CRM, Marta→PIM, Joanna→marża, Wojtek→WMS. Maile potwierdzające odpowiedzialność.</div>
+        <div class="plan-item"><strong>Tydzień 1–2: Definicja statusów CRM</strong> — Bartek + Rafał ustalają słownik: "wysłana" / "wygrana" / "utracona — cena" / "utracona — dostępność" / "utracona — czas". Bartek wdraża jako wymagane pola.</div>
+        <div class="plan-item"><strong>Tydzień 2–3: Mapowanie kosztów TMS→ERP</strong> — Bartek + Elżbieta: ręczne wyciągnięcie kosztów logistyki za ostatnie 6 miesięcy. Szacunkowy koszt per oddział per kategoria jako punkt startowy dla Bramki.</div>
+        <div class="plan-item"><strong>Tydzień 3–4: Definicja marży netto z CFO</strong> — Joanna + Bartek: co wchodzi do marży netto? Jedna definicja, zatwierdzona przez zarząd, wdrażana do ERP jako obliczane pole.</div>
+        <div class="plan-item"><strong>Tydzień 4: Zebranie Exceli handlowców</strong> — 10 pilotowych handlowców przekazuje lokalne listy zamienników Marcie. Gotowe do przeniesienia do PIM w miesiącu 2.</div>
+        <div class="plan-kpi" style="color:#dc2626">✅ Efekt: piloty #1 i #2 mogą startować shadow mode</div>
+      </div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-head" style="background:#d97706">
+        <div class="plan-days">DNI 31–60</div>
+        <div class="plan-title">Poprawa jakości w jednym obszarze</div>
+        <div class="plan-goal">Cel: czysty katalog dla Fazy 2 (AI Asystent)</div>
+      </div>
+      <div class="plan-body" style="border-color:#fcd34d">
+        <div class="plan-item"><strong>LLM-assisted cleansing katalogu</strong> — Marta + Bartek: użyć LLM (Claude) do masowego ujednolicenia opisów top 50k SKU, uzupełnienia atrybutów i wykrycia duplikatów. Szacowany czas ręcznie: 3 miesiące. Z AI: 2–3 tygodnie.</div>
+        <div class="plan-item"><strong>Integracja TecDoc API</strong> — Paweł: podpisanie licencji TecDoc, konfiguracja API kompatybilności VIN→część. Zewnętrzne źródło prawdy dla zamienników — zastępuje ręczne listy.</div>
+        <div class="plan-item"><strong>Połączenie zwrotów z ofertami ERP</strong> — Bartek + Paweł: mapowanie faktur zwrotnych z SKU i klientem. Umożliwi prawdziwe obliczenie marży uwzględniającej zwroty (Joanna chce).</div>
+        <div class="plan-item"><strong>Przeniesienie lokalnych zamienników do PIM</strong> — zebrana wiedza handlowców wchodzi do systemu. Tomasz (Senior) waliduje jakość przed importem.</div>
+        <div class="plan-item"><strong>Baseline KPI pilotów</strong> — Bartek mierzy: aktualny czas odpowiedzi na oferty, konwersję, marżę. Bez baseline nie udowodnimy sukcesu pilota (zasada z kursu: "mierz stare!").</div>
+        <div class="plan-kpi" style="color:#d97706">✅ Efekt: fundament pod AI Asystenta (Faza 2) i czysty PIM</div>
+      </div>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-head" style="background:#16a34a">
+        <div class="plan-days">DNI 61–90</div>
+        <div class="plan-title">Prosty system zarządzania danymi</div>
+        <div class="plan-goal">Cel: fundament pod skalowanie i Fazę 2</div>
+      </div>
+      <div class="plan-body" style="border-color:#86efac">
+        <div class="plan-item"><strong>Auto-monitoring jakości danych</strong> — Bartek + Paweł: proste reguły walidacji w CRM i PIM. Alert gdy: pole "powód utraty" = puste, SKU bez OE, koszt dostawy = 0 przy zamówieniu. Bartek dostaje alert gdy DQS spada.</div>
+        <div class="plan-item"><strong>API layer ERP↔CRM↔WMS</strong> — Paweł: jeden punkt dostępu do danych dla systemów AI. Fundament pod Elasticsearch i AI Asystenta. Używany już przez Pilota #3.</div>
+        <div class="plan-item"><strong>Roadmapa Data Warehouse</strong> — Bartek + Paweł + zewnętrzny konsultant: wybór platformy (Azure Synapse / Google BigQuery / Snowflake), plan wdrożenia na miesiące 4–12. Bez DWH Prognoza Popytu i Dashboard Zarządczy niemożliwe.</div>
+        <div class="plan-item"><strong>Polityka danych dla handlowców</strong> — Rafał podpisuje i egzekwuje: prosta instrukcja co wpisywać w CRM, jak oznaczać oferty, zakaz Exceli lokalnych jako oficjalnych baz.</div>
+        <div class="plan-item"><strong>Ewaluacja gotowości danych pod Fazę 2</strong> — audyt: czy historia sprzedaży 3 lata wystarczy dla Prognozy? Czy reklamacje są zmapowane? Decyzja: kiedy startuje DWH.</div>
+        <div class="plan-kpi" style="color:#16a34a">✅ Efekt: piloty na czystych danych, fundament DWH gotowy, właściciele aktywni</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="green-box">
+    <strong>💡 Sprytny skrót: AI może pomóc czyścić dane!</strong> Zamiast ręcznie czyścić 50k SKU przez 3 miesiące — użyj LLM do ujednolicenia opisów, uzupełnienia atrybutów i wykrycia duplikatów. To tzw. LLM-assisted data cleansing — Marta i Bartek mogą to zacząć w tydzień z prostym promptem. Koszt: kilkaset PLN w tokenach. Czas ręczny: 3 miesiące. Z AI: 2–3 tygodnie. To też jest świetna demonstracja AI dla organizacji — zanim piloty ruszą, Marta już widzi wartość AI na własnych danych.
+  </div>
+</div>
+
+<script>
+function show(idx){
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+}
+</script>
+</body>
+</html>
