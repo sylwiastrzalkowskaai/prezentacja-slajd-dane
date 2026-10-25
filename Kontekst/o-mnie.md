@@ -1,23 +1,29 @@
-# O mnie
-
-> Źródło: jedyny ślad naszej współpracy dostępny w tej sesji — repo `prezentacja-slajd-dane`
-> (slajd „Komentarz o danych — AutoPartner Max S.A.”). Historii czatów nie widzę.
-> „Brak danych” = nie powiedziałaś/eś tego; do uzupełnienia.
-
+# O mnie — kontekst do współpracy z AI
 ## 1. Kim jestem zawodowo
-- Rola / stanowisko / zakres odpowiedzialności: **brak danych**.
-- Jedyny trop: przygotowuję analizę gotowości danych pod AI dla firmy (case AutoPartner Max S.A.),
-  „wg metodologii kursu” — prawdopodobnie zadanie w ramach kursu o AI/danych. Nie wiem, czy to praca, czy nauka.
-
+Jestem lekarką dentystką, zajmuję się implantoprotetyką.
+Jestem właścicielką praktyki stomatologicznej B.V. w Holandii.
+Odpowiadam za zarządzanie firmą, pracowników, finanse, organizację pracy i decyzje strategiczne.
+Rozwijam markę osobistą w Warszawie, koncentrując się na kompleksowej odbudowie uzębienia.
+W leczeniu odpowiadam za część protetyczną, współpracując z chirurgiem implantologiem.
 ## 2. Co robię na co dzień
-- Zadania, delegowanie, praca samodzielna: **brak danych**.
-- Widoczne w repo: audyt jakości danych (7 kryteriów), mapa źródeł (ERP, CRM, WMS, PIM, TMS, Excel),
-  właściciele danych, plan 30/60/90 dni, ocena gotowości pilotów AI.
-
-## 3. Do czego będę Cię używać
-- Potwierdzone repo: tworzenie prezentacji/slajdów z analizą danych jako stron HTML.
-- Pozostałe zastosowania: **brak danych**.
-
-## 4. Czego nie chcę we współpracy
-- Styl, format, słowa, nawyki: **brak danych**.
-- Z tej prośby: zwięzłość (limit długości) i zero zmyślania — tylko to, co powiedziałaś/eś.
+Zarządzam personelem, wynagrodzeniami, umowami i sprawami administracyjnymi.
+Kontroluję rozliczenia, dokumentację i organizację pracy praktyki.
+Podejmuję decyzje biznesowe i rozwiązuję problemy pracownicze.
+Deleguję obsługę recepcji, umawianie pacjentów i zadania organizacyjne.
+Księgowość i część spraw administracyjnych powierzam specjalistom.
+Osobiście zajmuję się strategią, trudnymi decyzjami i rozwojem nowych projektów.
+## 3. Do czego głównie używam ChatGPT
+Do analizy dokumentów, umów i przepisów, szczególnie holenderskich.
+Do tłumaczeń i redagowania korespondencji po polsku i holendersku.
+Do budowania strategii marki osobistej i pozycjonowania eksperckiego.
+Do tworzenia treści na LinkedIn, blog i stronę internetową w moim stylu.
+Do SEO, analizy słów kluczowych oraz widoczności w Google i wyszukiwarkach AI.
+Do projektowania agentów AI, automatyzacji i usprawniania pracy.
+Do nauki AI, analizy materiałów edukacyjnych i rozwiązywania praktycznych problemów.
+## 4. Jak chcę współpracować
+Odpowiadaj po polsku, krótko, konkretnie i bez zbędnych wstępów.
+Najpierw podawaj najważniejszy wynik, a szczegóły rozwijaj na moją prośbę.
+Nie wymyślaj faktów ani brakujących informacji.
+Zachowuj mój naturalny głos, charakterystyczne sformułowania i emocje.
+Nie zmieniaj sensu moich tekstów bez wyraźnej prośby.
+Zadawaj pytania, kiedy brakuje danych niezbędnych do wykonania zadania.
