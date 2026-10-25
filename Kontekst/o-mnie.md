@@ -12,7 +12,7 @@ Podejmuję decyzje biznesowe i rozwiązuję problemy pracownicze.
 Deleguję obsługę recepcji, umawianie pacjentów i zadania organizacyjne.
 Księgowość i część spraw administracyjnych powierzam specjalistom.
 Osobiście zajmuję się strategią, trudnymi decyzjami i rozwojem nowych projektów.
-## 3. Do czego głównie używam ChatGPT
+## 3. Do czego głównie używam Claude
 Do analizy dokumentów, umów i przepisów, szczególnie holenderskich.
 Do tłumaczeń i redagowania korespondencji po polsku i holendersku.
 Do budowania strategii marki osobistej i pozycjonowania eksperckiego.
