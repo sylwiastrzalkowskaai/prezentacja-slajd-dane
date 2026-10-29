@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wykres na ławie oskarżonych</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;600&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: biurko śledcze z siatką pomiarową; akta (karta dowodu) po lewej, procedura po prawej, pasek sprawy u góry */
+:root{
+  --desk:#dde3e9; --grid:rgba(36,66,98,.075);
+  --paper:#fbfbf8; --paper-2:#f1f3f5;
+  --folder:#e9d9ae; --folder-ink:#3d3218;
+  --ink:#17202b; --ink-2:#526070; --line:#c8d0d9;
+  --blue:#2b5c8f; --bar:#2b5c8f; --red:#c0392b; --green:#1d7a4c;
+  --hl:#f5d443; --on-hl:#1d1a0a; --hl-soft:rgba(245,212,67,.28);
+  --top-bg:#141c26; --top-fg:#eef2f6; --top-2:#93a3b6;
+  --shadow:0 1px 0 rgba(20,30,45,.06),0 10px 30px -12px rgba(20,30,45,.28);
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --desk:#0f141a; --grid:rgba(150,180,215,.055);
+  --paper:#19212b; --paper-2:#212b37;
+  --folder:#3a3220; --folder-ink:#efe2bd;
+  --ink:#e8edf2; --ink-2:#9aa8b8; --line:#2f3a48;
+  --blue:#7eb0e3; --bar:#7eb0e3; --red:#ff6f61; --green:#4fc78f;
+  --hl:#f3d34c; --on-hl:#1d1a0a; --hl-soft:rgba(243,211,76,.16);
+  --top-bg:#0a0e13; --top-fg:#eef2f6; --top-2:#8796a8;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 14px 34px -14px rgba(0,0,0,.7);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --desk:#0f141a; --grid:rgba(150,180,215,.055);
+  --paper:#19212b; --paper-2:#212b37;
+  --folder:#3a3220; --folder-ink:#efe2bd;
+  --ink:#e8edf2; --ink-2:#9aa8b8; --line:#2f3a48;
+  --blue:#7eb0e3; --bar:#7eb0e3; --red:#ff6f61; --green:#4fc78f;
+  --hl:#f3d34c; --on-hl:#1d1a0a; --hl-soft:rgba(243,211,76,.16);
+  --top-bg:#0a0e13; --top-fg:#eef2f6; --top-2:#8796a8;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 14px 34px -14px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background-color:var(--desk);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.5;
+  min-height:100vh;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--top-bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--f-mono)}
+h1,h2,h3{font-family:var(--f-display);font-stretch:72%;text-wrap:balance;margin:0;line-height:1.02}
+
+/* ===== pasek górny ===== */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--top-bg);color:var(--top-fg)}
+.top .wrap{display:flex;align-items:center;gap:16px;padding-block:10px;min-height:56px}
+.brand{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;color:var(--top-fg);text-align:left}
+.brand-mark{width:30px;height:30px;border:2px solid var(--hl);border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--hl)}
+.brand b{font-family:var(--f-display);font-stretch:75%;font-weight:800;font-size:18px;letter-spacing:.06em;text-transform:uppercase;display:block;line-height:1}
+.brand small{font-family:var(--f-mono);font-size:10.5px;color:var(--top-2);letter-spacing:.04em}
+.steps{display:flex;gap:4px;margin-left:auto;list-style:none;padding:0;margin-block:0}
+.steps li{font-family:var(--f-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--top-2);padding:5px 9px;border-radius:3px;border:1px solid transparent;white-space:nowrap}
+.steps li.on{color:var(--on-hl);background:var(--hl)}
+.steps li.done{color:var(--top-fg);border-color:rgba(255,255,255,.18)}
+.score{font-family:var(--f-mono);font-size:12px;color:var(--top-2);display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.score b{font-size:20px;color:var(--top-fg);font-variant-numeric:tabular-nums;transition:color .3s}
+.score.bump b{color:var(--hl)}
+.top .brand + .score{margin-left:auto}
+@media (max-width:860px){.steps li:not(.on){display:none}}
+@media (max-width:520px){.brand small{display:none}.brand b{font-size:15px;white-space:nowrap}.steps{display:none}.top .brand + .score,.top .score{margin-left:auto}}
+
+/* ===== tablica spraw ===== */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:48px 28px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--red)}
+.hero h1{font-size:clamp(46px,7.4vw,92px);font-weight:900;text-transform:uppercase;letter-spacing:-.005em;margin-block:14px 18px}
+.hero h1 em{font-style:normal;background:linear-gradient(transparent 58%,var(--hl) 58%,var(--hl) 92%,transparent 92%);color:inherit;padding-inline:.04em}
+.hero p.lead{font-size:18px;max-width:52ch;color:var(--ink-2);margin:0 0 24px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.teaser{background:var(--paper);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);padding:18px 18px 14px;transform:rotate(1.2deg);position:relative}
+.teaser-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.teaser figure{margin:0}
+.teaser figcaption{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);text-align:center;margin-top:2px}
+.teaser .t-title{font-family:var(--f-display);font-stretch:75%;font-weight:800;font-size:22px;text-transform:uppercase;margin-bottom:8px}
+.teaser .t-foot{font-size:13.5px;color:var(--ink-2);margin:10px 0 0;border-top:1px dashed var(--line);padding-top:10px}
+.pin{position:absolute;top:-9px;left:50%;width:16px;height:16px;border-radius:50%;background:var(--red);box-shadow:0 2px 3px rgba(0,0,0,.35);transform:translateX(-50%)}
+
+.procedure{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding-block:8px 32px;list-style:none;margin:0;padding-left:0;counter-reset:st}
+.procedure li{counter-increment:st;border-top:2px solid var(--ink);padding-top:10px;min-width:0}
+.procedure li::before{content:"Krok " counter(st);font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+.procedure b{display:block;font-family:var(--f-display);font-stretch:75%;font-size:22px;text-transform:uppercase;margin-top:2px}
+.procedure span{font-size:14px;color:var(--ink-2)}
+
+.board-h{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.board-h h2{font-size:34px;text-transform:uppercase;font-weight:850}
+.cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:26px 18px;padding-bottom:64px}
+.folder{position:relative;text-align:left;background:var(--folder);color:var(--folder-ink);border:0;border-radius:0 6px 6px 6px;padding:20px 18px 16px;min-height:220px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);transition:transform .18s ease}
+.folder::before{content:attr(data-tab);position:absolute;top:-22px;left:0;height:22px;padding:4px 12px 0;border-radius:6px 6px 0 0;background:var(--folder);font-family:var(--f-mono);font-size:11px;letter-spacing:.1em}
+.folder:hover{transform:translateY(-3px) rotate(-.4deg)}
+.folder h3{font-size:28px;font-weight:850;text-transform:uppercase}
+.folder p{margin:0;font-size:14px;line-height:1.4}
+.folder .f-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;border-top:1px dashed currentColor;padding-top:10px;opacity:.95}
+.folder.final{background:var(--top-bg);color:var(--top-fg)}
+.folder.final::before{background:var(--top-bg);color:var(--hl)}
+.mini-stamp{border:2px solid currentColor;padding:1px 6px;border-radius:3px;transform:rotate(-4deg);font-weight:600}
+.mini-stamp.g{color:var(--green)}.mini-stamp.r{color:var(--red)}
+.folder.final .mini-stamp.r{color:#ff8a7e}.folder.final .mini-stamp.g{color:#6fe0a8}
+
+/* ===== przyciski ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:4px;border:2px solid var(--ink);background:var(--ink);color:var(--paper);font-weight:700;font-size:15px;padding:11px 18px;line-height:1.1;transition:transform .12s ease,background .2s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.hl{background:var(--hl);border-color:var(--hl);color:var(--on-hl)}
+.btn.sm{font-size:13px;padding:7px 12px}
+.top .btn.ghost{color:var(--top-fg);border-color:rgba(255,255,255,.28)}
+
+/* ===== widok sprawy ===== */
+.case-head{padding-block:26px 16px;display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+.case-head h1{font-size:clamp(34px,4.6vw,54px);font-weight:900;text-transform:uppercase}
+.case-head .eyebrow{margin-bottom:8px}
+.case-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:28px;align-items:start;padding-bottom:28px}
+
+.evidence{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:22px 22px 16px;min-width:0;overflow:hidden}
+.ev-tag{position:absolute;top:14px;right:-6px;background:var(--hl);color:var(--on-hl);font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;padding:5px 16px 5px 22px;transform:rotate(3deg);box-shadow:0 2px 4px rgba(0,0,0,.18);clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%)}
+.post-h{display:flex;align-items:center;gap:11px;margin-bottom:14px;padding-right:110px}
+.avatar{width:40px;height:40px;border-radius:9px;display:grid;place-items:center;font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:16px;color:var(--paper);background:var(--av,var(--blue));flex-shrink:0}
+.post-h b{display:block;font-size:15px}
+.post-h div span{display:block;font-size:12.5px;color:var(--ink-2)}
+.claim{font-family:var(--f-display);font-stretch:85%;font-weight:800;font-size:clamp(24px,3vw,32px);line-height:1.08;margin:0 0 4px;text-wrap:balance}
+.claim-sub{font-size:13px;color:var(--ink-2);margin:0 0 6px;font-family:var(--f-mono)}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.post-f{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+.ctx{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:4px 0 8px}
+.ctx div{background:var(--hl-soft);border-left:3px solid var(--hl);padding:7px 10px;border-radius:2px;font-size:13px;animation:fadeUp .4s ease both}
+.ctx b{font-family:var(--f-mono);font-size:14px;display:block}
+
+/* elementy wykresu */
+.c-grid{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+.c-axis{stroke:var(--ink);stroke-width:1.5}
+.c-tick{fill:var(--ink-2);font-family:var(--f-mono);font-size:11px}
+.c-unit{fill:var(--ink-2);font-family:var(--f-mono);font-size:10.5px;letter-spacing:.04em}
+.c-lab{fill:var(--ink);font-family:var(--f-body);font-size:12.5px;font-weight:600}
+.c-val{fill:var(--ink);font-family:var(--f-mono);font-size:13px;font-weight:600}
+.c-bar{fill:var(--bar)}
+.c-bar.bad{fill:var(--red)}
+.c-bar.good{fill:var(--green)}
+.c-bar.dim{fill:var(--ink-2);opacity:.45}
+.c-hl{fill:var(--hl)}
+.c-hltxt{fill:var(--on-hl);font-family:var(--f-mono);font-size:11.5px;font-weight:600}
+.c-ring{fill:none;stroke:var(--red);stroke-width:2;animation:ring 1.6s ease-out infinite}
+.c-line{fill:none;stroke:var(--bar);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.c-area{fill:var(--bar);opacity:.12}
+.c-dot{fill:var(--paper);stroke:var(--bar);stroke-width:2.5}
+.c-range{fill:var(--hl);opacity:.8}
+.c-note{fill:var(--red);font-family:var(--f-mono);font-size:11px;font-weight:600}
+@keyframes ring{0%{opacity:.9;stroke-width:3}100%{opacity:0;stroke-width:0}}
+
+/* pieczątka */
+.stamp-layer{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.stamp{font-family:var(--f-display);font-stretch:68%;font-weight:900;font-size:clamp(34px,5vw,54px);letter-spacing:.04em;text-transform:uppercase;color:var(--red);border:5px solid var(--red);border-radius:8px;padding:4px 18px 2px;transform:rotate(-11deg);mix-blend-mode:multiply;opacity:.9;background:color-mix(in srgb,var(--paper) 55%,transparent);animation:slam .45s cubic-bezier(.2,1.6,.4,1) both;text-align:center;line-height:1}
+.stamp small{display:block;font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;font-weight:600;border-top:2px solid currentColor;margin-top:4px;padding-top:3px}
+.stamp.g{color:var(--green);border-color:var(--green)}
+:root[data-theme="dark"] .stamp{mix-blend-mode:normal}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .stamp{mix-blend-mode:normal}}
+@keyframes slam{0%{transform:rotate(-11deg) scale(2.6);opacity:0}60%{opacity:.95}100%{transform:rotate(-11deg) scale(1);opacity:.9}}
+
+/* panel procedury */
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:22px;min-width:0;box-shadow:var(--shadow)}
+.panel-k{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.panel h2{font-size:30px;text-transform:uppercase;font-weight:850;margin-bottom:8px}
+.panel p{margin:0 0 14px}
+.panel .muted{color:var(--ink-2);font-size:14px}
+.q{font-size:18px;font-weight:600;line-height:1.35;margin:0 0 14px}
+.opts{display:grid;gap:8px;margin-bottom:16px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--paper-2);border:2px solid transparent;border-radius:6px;padding:11px 13px;font-size:15px;line-height:1.35;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--line)}
+.opt .k{font-family:var(--f-mono);font-size:12px;font-weight:600;min-width:22px;height:22px;border:1.5px solid var(--ink-2);border-radius:50%;display:grid;place-items:center;flex-shrink:0;margin-top:-1px}
+.opt.sel{border-color:var(--ink);background:var(--hl-soft)}
+.opt.sel .k{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.opt:disabled{cursor:default}
+.opt.ok{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--paper))}
+.opt.ok .k{background:var(--green);border-color:var(--green);color:var(--paper)}
+.opt.bad{border-color:var(--red);background:color-mix(in srgb,var(--red) 10%,var(--paper))}
+.opt.bad .k{background:var(--red);border-color:var(--red);color:var(--paper)}
+.opt .why{display:block;font-size:13.5px;color:var(--ink-2);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600}
+.chip.sel{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.label{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 8px;display:block}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.tools{display:grid;gap:10px;margin-bottom:16px}
+.tool{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;width:100%;background:var(--paper-2);border:2px solid transparent;border-radius:6px;padding:10px 12px;transition:border-color .15s,transform .12s}
+.tool:hover:not(:disabled){border-color:var(--ink);transform:translateX(2px)}
+.tool .ic{width:44px;height:44px;border-radius:6px;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--f-mono);font-weight:600;font-size:15px}
+.tool b{display:block;font-size:15px}
+.tool span{display:block;font-size:13px;color:var(--ink-2);line-height:1.35}
+.tool .st{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.tool.used .ic{background:var(--hl);color:var(--on-hl)}
+.tool.used .st{color:var(--green)}
+.slider-tool{background:var(--paper-2);border:2px solid var(--ink);border-radius:6px;padding:12px 14px}
+.slider-tool .top-row{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:6px}
+.slider-tool b{font-size:15px}
+.slider-tool output{font-family:var(--f-mono);font-size:14px;font-weight:600;background:var(--hl);color:var(--on-hl);padding:2px 8px;border-radius:3px;white-space:nowrap}
+.slider-tool input{width:100%;accent-color:var(--red);height:28px}
+.slider-tool .ends{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--ink-2)}
+.slider-tool span.d{display:block;font-size:13px;color:var(--ink-2);margin-bottom:4px}
+
+.notes{border-top:2px solid var(--ink);padding-top:12px;margin:4px 0 16px}
+.notes ol{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:n}
+.notes li{counter-increment:n;display:grid;grid-template-columns:30px minmax(0,1fr);gap:6px;font-size:14.5px;animation:fadeUp .35s ease both}
+.notes li::before{content:"§" counter(n);font-family:var(--f-mono);font-size:12px;color:var(--red);font-weight:600;padding-top:2px}
+.notes .empty{font-size:14px;color:var(--ink-2);font-style:italic}
+.hint{background:var(--hl);color:var(--on-hl);padding:12px 14px;border-radius:2px;transform:rotate(-.8deg);box-shadow:0 6px 14px -8px rgba(0,0,0,.4);font-weight:600;margin-bottom:14px;animation:fadeUp .3s ease both}
+.hint small{display:block;font-family:var(--f-mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.report-box{border:2px solid var(--ink);border-radius:6px;padding:14px 16px;margin:4px 0 16px;background:var(--paper-2)}
+.report-box .label{color:var(--red)}
+.report-box p{margin:0;font-size:15.5px}
+.pts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.pts span{font-family:var(--f-mono);font-size:12.5px;padding:4px 10px;border-radius:3px;border:1.5px solid var(--line)}
+.pts span.y{border-color:var(--green);color:var(--green)}
+.pts span.n{border-color:var(--red);color:var(--red)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* przed / po */
+.compare{padding-bottom:56px}
+.compare h2{font-size:30px;text-transform:uppercase;font-weight:850;margin-bottom:4px}
+.compare > p{color:var(--ink-2);margin:0 0 16px}
+.compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.cmp{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:18px;min-width:0;position:relative}
+.cmp .label{display:inline-block;padding:3px 9px;border-radius:3px;color:var(--paper);background:var(--red)}
+.cmp.after .label{background:var(--green)}
+.cmp h3{font-family:var(--f-display);font-stretch:85%;font-size:24px;font-weight:800;margin:10px 0 6px}
+.cmp.before h3{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:3px}
+
+/* raport końcowy */
+.final-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:center;padding-block:44px 24px}
+.final-hero h1{font-size:clamp(42px,6.5vw,80px);font-weight:900;text-transform:uppercase}
+.big-score{font-family:var(--f-mono);font-size:15px;color:var(--ink-2);margin-top:10px}
+.big-score b{font-size:44px;color:var(--ink);font-variant-numeric:tabular-nums}
+.rank-stamp{position:static;animation-delay:.2s;mix-blend-mode:normal}
+.tbl-wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;margin-bottom:24px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.y{color:var(--green);font-weight:700}.n{color:var(--red);font-weight:700}
+.insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:28px}
+.insight{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+.insight b{font-family:var(--f-display);font-stretch:75%;font-size:40px;font-weight:900;display:block;line-height:1}
+.insight p{margin:6px 0 0;font-size:14.5px;color:var(--ink-2)}
+.questions{background:var(--top-bg);color:var(--top-fg);border-radius:8px;padding:22px 24px;margin-bottom:28px}
+.questions h2{font-size:28px;text-transform:uppercase;margin-bottom:12px;font-weight:850}
+.questions ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.questions li{border-left:3px solid var(--hl);padding:2px 0 2px 12px;font-size:15px}
+.questions li b{display:block;font-family:var(--f-mono);font-size:11px;color:var(--hl);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+
+@media (max-width:900px){
+  .hero,.case-grid,.final-hero{grid-template-columns:minmax(0,1fr)}
+  .hero{padding-block:32px 20px;gap:28px}
+  .teaser{transform:none}
+  .procedure{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .compare-grid{grid-template-columns:minmax(0,1fr)}
+  .evidence,.panel{padding:16px}
+  .post-h{padding-right:90px}
+  .tool{grid-template-columns:38px minmax(0,1fr)}
+  .tool .ic{width:38px;height:38px}
+  .tool .st{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
+const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+const nf = (t) => (Math.round(t * 100) / 100).toLocaleString("pl-PL", { maximumFractionDigits: 2 });
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* ---------- wykresy (SVG rysowane od nowa przy każdej zmianie) ---------- */
+const CW = 440, CH = 270;
+let uid = 0;
+function niceStep(range) {
+  const raw = range / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p;
+  return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * p;
+}
+function ticksFor(min, max) {
+  const s = niceStep(max - min), out = [];
+  for (let v = Math.ceil(min / s - 1e-9) * s; v <= max + 1e-9; v += s) out.push(+v.toFixed(4));
+  if (!out.length || Math.abs(out[0] - min) > 1e-6) {
+    while (out.length && out[0] - min < s * 0.6) out.shift();
+    out.unshift(+min.toFixed(4));
+  }
+  return out;
+}
+function barsV(o) {
+  const m = { l: 58, r: 14, t: 30, b: 40 }, pw = CW - m.l - m.r, ph = CH - m.t - m.b;
+  const clamp = (v) => Math.min(Math.max(v, o.min), o.max);
+  const sy = (v) => m.t + ph - (clamp(v) - o.min) / (o.max - o.min) * ph;
+  let s = `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="${esc(o.aria || "Wykres słupkowy")}">`;
+  s += `<text class="c-unit" x="4" y="12">${esc(o.unit || "")}</text>`;
+  ticksFor(o.min, o.max).forEach((t) => {
+    const y = sy(t);
+    s += `<line class="c-grid" x1="${m.l}" x2="${CW - m.r}" y1="${y}" y2="${y}"/><text class="c-tick" x="${m.l - 8}" y="${y + 4}" text-anchor="end">${o.fmtTick(t)}</text>`;
+  });
+  const n = o.vals.length, band = pw / n, bw = Math.min(band * 0.56, 110);
+  o.vals.forEach((v, i) => {
+    const x = m.l + band * i + (band - bw) / 2;
+    const frac = o.fracs ? o.fracs[i] : (clamp(v) - o.min) / (o.max - o.min);
+    const h = Math.max(frac * ph, 0), y = m.t + ph - h;
+    s += `<rect class="c-bar ${o.barClass ? o.barClass[i] : ""}" x="${x}" y="${y}" width="${bw}" height="${h}" rx="2"/>`;
+    if (o.showVals) s += `<text class="c-val" x="${x + bw / 2}" y="${y - 8}" text-anchor="middle">${o.fmtVal(v, i)}</text>`;
+    s += `<text class="c-lab" x="${x + bw / 2}" y="${CH - m.b + 20}" text-anchor="middle">${esc(o.labels[i])}</text>`;
+  });
+  s += `<line class="c-axis" x1="${m.l}" x2="${m.l}" y1="${m.t - 6}" y2="${m.t + ph}"/><line class="c-axis" x1="${m.l}" x2="${CW - m.r}" y1="${m.t + ph}" y2="${m.t + ph}"/>`;
+  if (o.hlAxis) {
+    const y = m.t + ph;
+    s += `<rect class="c-hl" x="2" y="${y - 11}" width="${m.l - 6}" height="22" rx="3"/><text class="c-hltxt" x="${m.l - 8}" y="${y + 4}" text-anchor="end">${o.fmtTick(o.min)}</text>`;
+    s += `<circle class="c-ring" cx="${m.l}" cy="${y}" r="16"/>`;
+  }
+  return s + "</svg>";
+}
+function barsH(o) {
+  const m = { l: 122, r: 52, t: 22, b: 42 }, pw = CW - m.l - m.r, ph = CH - m.t - m.b;
+  const clamp = (v) => Math.min(Math.max(v, o.min), o.max);
+  const sx = (v) => m.l + (clamp(v) - o.min) / (o.max - o.min) * pw;
+  let s = `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="${esc(o.aria || "Wykres słupkowy poziomy")}">`;
+  ticksFor(o.min, o.max).forEach((t) => {
+    const x = sx(t);
+    s += `<line class="c-grid" x1="${x}" x2="${x}" y1="${m.t}" y2="${m.t + ph}"/><text class="c-tick" x="${x}" y="${m.t + ph + 18}" text-anchor="middle">${o.fmtTick(t)}</text>`;
+  });
+  s += `<text class="c-unit" x="${CW - m.r}" y="${CH - 4}" text-anchor="end">${esc(o.unit || "")}</text>`;
+  const n = o.vals.length, band = ph / n, bh = Math.min(band * 0.5, 54);
+  o.vals.forEach((v, i) => {
+    const y = m.t + band * i + (band - bh) / 2, w = Math.max(sx(v) - m.l, 0);
+    s += `<rect class="c-bar ${o.barClass ? o.barClass[i] : ""}" x="${m.l}" y="${y}" width="${w}" height="${bh}" rx="2"/>`;
+    s += `<text class="c-lab" x="${m.l - 10}" y="${y + bh / 2 + 4}" text-anchor="end">${esc(o.labels[i])}</text>`;
+    if (o.showVals) s += `<text class="c-val" x="${m.l + w + 8}" y="${y + bh / 2 + 5}">${o.fmtVal(v)}</text>`;
+  });
+  s += `<line class="c-axis" x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${m.t + ph}"/><line class="c-axis" x1="${m.l}" x2="${CW - m.r}" y1="${m.t + ph}" y2="${m.t + ph}"/>`;
+  if (o.hlAxis) {
+    const y = m.t + ph + 18;
+    s += `<rect class="c-hl" x="${m.l - 22}" y="${y - 14}" width="44" height="20" rx="3"/><text class="c-hltxt" x="${m.l}" y="${y}" text-anchor="middle">${o.fmtTick(o.min)}</text>`;
+    s += `<circle class="c-ring" cx="${m.l}" cy="${m.t + ph}" r="16"/>`;
+  }
+  return s + "</svg>";
+}
+function lineC(o) {
+  const m = { l: 54, r: 18, t: 30, b: 42 }, pw = CW - m.l - m.r, ph = CH - m.t - m.b;
+  const a = o.x0 - 0.35, b = o.x1 + 0.35;
+  const sx = (i) => m.l + (i - a) / (b - a) * pw;
+  const sy = (v) => m.t + ph - (v - o.min) / (o.max - o.min) * ph;
+  const id = "clip" + (++uid);
+  let s = `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="${esc(o.aria || "Wykres liniowy")}"><defs><clipPath id="${id}"><rect x="${Math.max(m.l, sx(o.x0) - 12)}" y="0" width="${CW - m.r - Math.max(m.l, sx(o.x0) - 12)}" height="${m.t + ph}"/></clipPath></defs>`;
+  s += `<text class="c-unit" x="4" y="12">${esc(o.unit || "")}</text>`;
+  ticksFor(o.min, o.max).forEach((t) => {
+    const y = sy(t);
+    s += `<line class="c-grid" x1="${m.l}" x2="${CW - m.r}" y1="${y}" y2="${y}"/><text class="c-tick" x="${m.l - 8}" y="${y + 4}" text-anchor="end">${nf(t)}</text>`;
+  });
+  if (o.hlRange) {
+    const first = Math.max(0, Math.ceil(o.x0 - 1e-6)), x1 = sx(first) - 20, x2 = sx(o.x1) + 20;
+    s += `<rect class="c-range" x="${Math.max(x1, m.l)}" y="${CH - m.b + 5}" width="${Math.min(x2, CW - m.r) - Math.max(x1, m.l)}" height="22" rx="3"/>`;
+  }
+  const pts = o.vals.map((v, i) => [sx(i), sy(v)]);
+  const d = "M" + pts.map((p) => p.join(",")).join("L");
+  s += `<g clip-path="url(#${id})"><path class="c-area" d="${d}L${pts[pts.length - 1][0]},${m.t + ph}L${pts[0][0]},${m.t + ph}Z"/><path class="c-line" d="${d}"/>`;
+  pts.forEach((p, i) => {
+    s += `<circle class="c-dot" cx="${p[0]}" cy="${p[1]}" r="5"/>`;
+    if (o.showVals) s += `<text class="c-val" x="${p[0]}" y="${p[1] - 12}" text-anchor="middle">${o.vals[i]}</text>`;
+  });
+  s += "</g>";
+  o.labels.forEach((lab, i) => {
+    const x = sx(i), op = Math.max(0, Math.min(1, (x - m.l + 6) / 18));
+    if (op > 0 && x <= CW - m.r + 4) s += `<text class="c-lab" x="${x}" y="${CH - m.b + 20}" text-anchor="middle" opacity="${op.toFixed(2)}" style="fill:${o.hlRange ? "var(--on-hl)" : ""}">${esc(lab)}</text>`;
+  });
+  s += `<line class="c-axis" x1="${m.l}" x2="${m.l}" y1="${m.t - 6}" y2="${m.t + ph}"/><line class="c-axis" x1="${m.l}" x2="${CW - m.r}" y1="${m.t + ph}" y2="${m.t + ph}"/>`;
+  return s + "</svg>";
+}
+
+/* ---------- sprawy (fikcyjne firmy i dane) ---------- */
+const EVIDENCE = ["Skrócona oś pionowa", "Wycięty zakres czasu", "Procent bez punktu odniesienia", "Brak manipulacji"];
+const SALES = [120, 118, 115, 110, 100, 104];
+const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze"];
+
+const CASES = [
+  {
+    no: "01", title: "Podejrzana skala", teaser: "Czy firma naprawdę wystrzeliła?", trap: "Skrócona oś",
+    guilty: true, stamp: "Przeskalowany",
+    post: { av: "LU", avc: "var(--blue)", org: "Lumena S.A.", meta: "Prezentacja dla zarządu · slajd 7", headline: "Nowa strategia działa! Sprzedaż rośnie w zawrotnym tempie", sub: "Sprzedaż kwartalna", foot: ["Slajd 7 z 24", "Poufne: tylko do użytku wewnętrznego"] },
+    question: "Czy ten wykres przekonuje Cię, że nastąpił ogromny wzrost?",
+    view: { min: 98, max: 105 }, fixedView: { min: 0, max: 110 }, fixedFlags: { nums: true },
+    draw: (v, f) => barsV({ vals: [100, 104], labels: ["I kwartał", "II kwartał"], min: v.min, max: v.max, showVals: f.nums, hlAxis: f.axis, fmtVal: (x) => x + " tys. zł", fmtTick: nf, unit: "tys. zł", aria: "Sprzedaż w I i II kwartale" }),
+    tools: [
+      { id: "nums", ic: "12", label: "Pokaż liczby", desc: "Wypisz wartości nad słupkami.", run: (S) => { S.flags.nums = true; return "Nad słupkami: 100 tys. zł i 104 tys. zł. Różnica to 4 tys. zł, czyli 4%."; } },
+      { id: "axis", ic: "↕", label: "Zbadaj oś", desc: "Sprawdź, od jakiej wartości zaczyna się oś pionowa.", run: (S) => { S.flags.axis = true; return "Oś pionowa zaczyna się od 98 tys. zł, a nie od zera. Widzisz tylko wierzchołki słupków."; } },
+      { id: "base", kind: "slider", label: "Przywróć punkt odniesienia", desc: "Przesuń początek osi w stronę zera.", prop: "min", from: 98, to: 0, step: 0.5, fmt: (x) => "oś od " + nf(x) + " tys. zł",
+        done: "Przy osi od zera słupki są niemal równe. Liczby się nie zmieniły. Zmieniło się wrażenie." }
+    ],
+    hint: "Od jakiej wartości zaczyna się oś pionowa?",
+    verdicts: ["Podane liczby są nieprawdziwe", "Liczby są poprawne, ale sposób prezentacji wyolbrzymia różnicę", "Wykres uzasadnia określenie „ogromny wzrost”"],
+    verdictOk: 1,
+    verdictWhy: ["Liczby się zgadzają: 100 i 104 tys. zł. Problem leży w tym, jak je narysowano.", "Tak. Dane są prawdziwe, ale skrócona oś zrobiła z 4% wizualny skok.", "4% to umiarkowany wzrost. „Ogromny” jest tylko wrażenie, które tworzy skrócona oś."],
+    evidenceOk: 0,
+    evidenceWhy: ["Tak. Oś startuje od 98 tys. zł, więc różnica 4 tys. wygląda na trzykrotną.", "Wykres pokazuje oba kwartały, o których mówi nagłówek. Zakres czasu nie jest tu problemem.", "Na wykresie nie ma procentów. Zwodzi wysokość słupków.", "Coś jednak jest nie tak: sprawdź, gdzie zaczyna się oś."],
+    summary: "Sprzedaż wzrosła o 4%. Na początkowym wykresie widoczne części słupków miały wysokość 2 i 6 jednostek, dlatego drugi wyglądał na trzykrotnie wyższy. To nie oznacza trzykrotnego wzrostu sprzedaży.",
+    fixes: [
+      { t: "Sprzedaż eksplodowała: trzy razy więcej niż kwartał temu", why: "To fałsz. Trzykrotny był tylko słupek, nie sprzedaż." },
+      { t: "Sprzedaż wzrosła ze 100 do 104 tys. zł (+4%)", ok: true, why: "Konkretne liczby i skala zmiany. Czytelnik sam oceni, czy to dużo." },
+      { t: "Sprzedaż stoi w miejscu", why: "Przesada w drugą stronę: 4% to realny, choć umiarkowany wzrost." }
+    ]
+  },
+  {
+    no: "02", title: "Zaginione miesiące", teaser: "Czy sprzedaż naprawdę odbiła?", trap: "Wycięty zakres czasu",
+    guilty: true, stamp: "Wycięty kadr",
+    post: { av: "ZI", avc: "var(--green)", org: "Kawiarnie Ziarnko", meta: "Post firmowy · 2 godz. temu", headline: "Odbicie! Sprzedaż Ziarnka znów rośnie", sub: "Sprzedaż miesięczna sieci", foot: ["412 reakcji", "38 komentarzy", "57 udostępnień"] },
+    question: "Czy ten wykres przekonuje Cię, że sprzedaż odbiła?",
+    view: { x0: 4, min: 99, max: 105 }, fixedView: { x0: 0, min: 90, max: 125 }, fixedFlags: { nums: true },
+    draw: (v, f) => lineC({ vals: SALES, labels: MONTHS, x0: v.x0, x1: 5, min: v.min, max: v.max, showVals: f.nums, hlRange: f.range, unit: "tys. zł", aria: "Sprzedaż miesięczna" }),
+    tools: [
+      { id: "nums", ic: "12", label: "Pokaż liczby", desc: "Wypisz wartości przy punktach.", run: (S) => { S.flags.nums = true; return "Maj: 100 tys. zł, czerwiec: 104 tys. zł. Wzrost o 4%."; } },
+      { id: "range", ic: "⇆", label: "Sprawdź zakres czasu", desc: "Porównaj okres na wykresie z okresem raportu.", run: (S) => { S.flags.range = true; return "Raport obejmuje styczeń–czerwiec, a wykres pokazuje tylko maj i czerwiec. Gdzie są pozostałe miesiące?"; } },
+      { id: "widen", kind: "slider", label: "Rozsuń oś czasu", desc: "Dodaj do wykresu wcześniejsze miesiące.", prop: "months", from: 2, to: 6, step: 1, fmt: (x) => x + " z 6 mies.",
+        apply: (S, n) => { const vis = SALES.slice(6 - n); animateView({ x0: 6 - n, min: Math.min(...vis) - 1, max: Math.max(...vis) + 1 }, 650); },
+        done: "Od stycznia sprzedaż spadła ze 120 do 100 tys. zł. Czerwcowe 104 tys. zł to wciąż 13% mniej niż w styczniu." }
+    ],
+    hint: "Jaki okres obejmuje raport, a jaki pokazuje wykres?",
+    verdicts: ["Podane liczby są nieprawdziwe", "Liczby są poprawne, ale wybrany fragment czasu zmienia obraz sytuacji", "Wykres uzasadnia tezę o odbiciu sprzedaży"],
+    verdictOk: 1,
+    verdictWhy: ["Maj i czerwiec są podane poprawnie. Kłopot w tym, czego nie pokazano.", "Tak. Dwa najlepiej wyglądające punkty ukryły pięć miesięcy spadków.", "Jeden miesiąc wzrostu po pięciu spadkach to za mało, żeby mówić o odbiciu."],
+    evidenceOk: 1,
+    evidenceWhy: ["Na wykresie liniowym oś nie musi zaczynać się od zera. Tu ważniejsze jest to, które miesiące pominięto.", "Tak. Pokazano tylko maj i czerwiec, a raport obejmuje całe półrocze.", "Na wykresie nie ma procentów.", "Rozsuń oś czasu, a zobaczysz, co ukryto."],
+    summary: "W czerwcu sprzedaż wzrosła o 4%, ale to odbicie po pięciu miesiącach spadków: ze 120 do 100 tys. zł. Względem stycznia sprzedaż jest o 13% niższa. Dwa wybrane punkty nie opisują całego półrocza.",
+    fixes: [
+      { t: "Wielki powrót! Sprzedaż znów rośnie", why: "To ta sama teza. Jeden miesiąc wzrostu nie odwraca półrocznego spadku." },
+      { t: "Ziarnko na skraju bankructwa: sprzedaż leci w dół", why: "Przesada w drugą stronę. Dane pokazują spadek i lekkie odbicie, nie bankructwo." },
+      { t: "W czerwcu sprzedaż wzrosła o 4%, ale wciąż jest o 13% niższa niż w styczniu", ok: true, why: "Krótki trend i cały okres w jednym zdaniu." }
+    ]
+  },
+  {
+    no: "03", title: "Procent bez kontekstu", teaser: "Fala reklamacji czy fala klientów?", trap: "Procent bez punktu odniesienia",
+    guilty: true, stamp: "Bez kontekstu",
+    post: { av: "B24", avc: "var(--red)", org: "BizNewsy24", meta: "Portal biznesowy · Pilne", headline: "Fala reklamacji w Pakuj.to! Ich liczba wzrosła o 100%", sub: "Reklamacje w sklepie Pakuj.to", foot: ["Czytano 18 tys. razy", "Kategoria: e-commerce"] },
+    question: "Czy ten wykres przekonuje Cię, że w Pakuj.to jest coraz gorzej?",
+    view: { t: 0 }, fixedView: { t: 1 }, fixedFlags: { nums: true, orders: true },
+    draw: (v, f) => {
+      const t = v.t, rate = t >= 0.5, fc = [1 / 2.5, 2 / 2.5], fr = [1 / 1.2, 0.2 / 1.2];
+      return barsV({
+        vals: rate ? [1, 0.2] : [1, 2], fracs: fc.map((x, i) => x + (fr[i] - x) * t), labels: ["wrzesień", "październik"],
+        min: 0, max: rate ? 1.2 : 2.5, showVals: f.nums || rate,
+        fmtVal: rate ? (x) => nf(x) + "% zamówień" : (x) => x + (x === 1 ? " reklamacja" : " reklamacje"),
+        fmtTick: rate ? (x) => nf(x) + "%" : nf, unit: rate ? "odsetek zamówień z reklamacją" : "liczba reklamacji",
+        barClass: rate ? ["dim", "good"] : ["dim", "bad"], aria: "Reklamacje we wrześniu i październiku"
+      });
+    },
+    context: (f) => f.orders ? `<div><span class="label">Zamówienia, wrzesień</span><b>100</b></div><div><span class="label">Zamówienia, październik</span><b>1000 (×10)</b></div>` : "",
+    tools: [
+      { id: "nums", ic: "12", label: "Pokaż liczby", desc: "Ile reklamacji kryje się za „100%”?", run: (S) => { S.flags.nums = true; return "Reklamacji było 1, potem 2. Wzrost o 100% to w praktyce jedna reklamacja więcej."; } },
+      { id: "orders", ic: "Σ", label: "Odsłoń liczbę zamówień", desc: "Ilu klientów mogło złożyć reklamację?", run: (S) => { S.flags.orders = true; return "W tym samym czasie zamówień przybyło ze 100 do 1000."; } },
+      { id: "rate", ic: "%", label: "Przelicz na odsetek", desc: "Ile reklamacji przypada na 100 zamówień?", run: (S) => { animateView({ t: 1 }, 900); return "Odsetek zamówień z reklamacją spadł z 1% do 0,2%. Jakość obsługi się poprawiła."; } }
+    ],
+    hint: "100% czego? Ile w tym czasie było zamówień?",
+    verdicts: ["Podane liczby są nieprawdziwe", "Liczby są poprawne, ale bez kontekstu sugerują odwrotny wniosek", "Wykres dowodzi, że jakość obsługi się pogorszyła"],
+    verdictOk: 1,
+    verdictWhy: ["Reklamacji naprawdę przybyło o 100%: z 1 do 2. Liczba jest prawdziwa, wniosek nie.", "Tak. Bez liczby zamówień wzrost z 1 do 2 wygląda jak kryzys, a odsetek reklamacji spadł.", "Na 100 zamówień przypada dziś 0,2 reklamacji zamiast 1. Obsługa się poprawiła."],
+    evidenceOk: 2,
+    evidenceWhy: ["Oś zaczyna się od zera. Kłopot nie leży w skali.", "Oba miesiące, o których mowa, są na wykresie.", "Tak. „100% więcej” bez liczby zamówień nie mówi nic o jakości obsługi.", "Prawdziwa liczba może prowadzić do fałszywego wniosku. Odsłoń zamówienia."],
+    summary: "Reklamacji przybyło z 1 do 2, ale zamówień ze 100 do 1000. Wcześniej na 100 zamówień przypadała 1 reklamacja, teraz 0,2. Jakość obsługi wzrosła, a nie spadła.",
+    fixes: [
+      { t: "Pakuj.to: 10 razy więcej zamówień, a odsetek reklamacji spadł z 1% do 0,2%", ok: true, why: "Liczba i jej punkt odniesienia w jednym zdaniu." },
+      { t: "Reklamacje w Pakuj.to podwoiły się", why: "Formalnie prawda, ale bez liczby zamówień czytelnik dojdzie do odwrotnego wniosku." },
+      { t: "Pakuj.to nie ma żadnych problemów z jakością", why: "Za mocno. Dwa miesiące danych tego nie dowodzą, a reklamacje wciąż się zdarzają." }
+    ]
+  },
+  {
+    no: "04", title: "Podejrzany numer 4", teaser: "Czy aplikacja naprawdę się podwoiła?", trap: "Brak manipulacji",
+    guilty: false, stamp: "Uniewinniony",
+    post: { av: "FI", avc: "var(--ink-2)", org: "Fiszkoo", meta: "Blog produktu · podsumowanie roku 2025", headline: "Fiszkoo w rok podwoiło liczbę użytkowników", sub: "Aktywni użytkownicy na koniec kwartału", foot: ["Źródło: dane z aplikacji", "Okres: I–IV kwartał 2025"] },
+    question: "Czy ten wykres przekonuje Cię, że liczba użytkowników się podwoiła?",
+    view: { min: 0, max: 50 }, fixedView: { min: 0, max: 50 }, fixedFlags: { nums: true },
+    draw: (v, f) => barsV({ vals: [21, 27, 35, 43], labels: ["I kw.", "II kw.", "III kw.", "IV kw."], min: v.min, max: v.max, showVals: f.nums, hlAxis: f.axis, fmtVal: (x) => x + " tys.", fmtTick: nf, unit: "tys. użytkowników", aria: "Użytkownicy w kwartałach 2025" }),
+    tools: [
+      { id: "nums", ic: "12", label: "Pokaż liczby", desc: "Wypisz wartości nad słupkami.", run: (S) => { S.flags.nums = true; return "Kolejne kwartały: 21, 27, 35 i 43 tys. użytkowników."; } },
+      { id: "axis", ic: "↕", label: "Zbadaj oś", desc: "Sprawdź, od jakiej wartości zaczyna się oś pionowa.", run: (S) => { S.flags.axis = true; return "Oś zaczyna się od zera. Wysokości słupków są proporcjonalne do wartości."; } },
+      { id: "range", ic: "⇆", label: "Sprawdź zakres czasu", desc: "Czy jakiegoś okresu brakuje?", run: () => "Pokazano wszystkie cztery kwartały 2025 r. Nic nie pominięto." },
+      { id: "calc", ic: "÷", label: "Policz zmianę", desc: "Porównaj początek i koniec okresu.", run: () => "43 ÷ 21 ≈ 2,05. Liczba użytkowników rzeczywiście się podwoiła (+105%)." }
+    ],
+    hint: "Czy w tym wykresie w ogóle jest coś do poprawienia?",
+    verdicts: ["Podane liczby są nieprawdziwe", "Liczby są poprawne, ale prezentacja wyolbrzymia wzrost", "Wykres uczciwie uzasadnia nagłówek"],
+    verdictOk: 2,
+    verdictWhy: ["Nic na to nie wskazuje: źródło i okres są podane, wartości są spójne.", "Oś od zera, pełny rok, wzrost z 21 do 43 tys. Tu nie ma czego wyolbrzymiać.", "Tak. Oś od zera, cały okres, a „podwoiło” zgadza się z liczbami. Detektyw umie też uniewinnić."],
+    evidenceOk: 3,
+    evidenceWhy: ["Oś zaczyna się od zera.", "Pokazano wszystkie kwartały roku.", "Nagłówek nie podaje procentu bez kontekstu: liczby są na wykresie.", "Tak. Sprawdzone: oś, okres i liczby się zgadzają."],
+    summary: "Oś zaczyna się od zera, pokazano cały rok, a liczba użytkowników wzrosła z 21 do 43 tys. (+105%). Nagłówek „podwoiło” uczciwie podsumowuje dane.",
+    fixKicker: "Czy nagłówek wymaga poprawki?",
+    fixes: [
+      { t: "Liczba użytkowników wzrosła nieznacznie", why: "Nadmierna ostrożność też zniekształca dane. +105% to nie jest „nieznacznie”." },
+      { t: "Fiszkoo zdominowało rynek aplikacji do nauki", why: "Wykres mówi o wzroście Fiszkoo, nie o rynku ani konkurencji." },
+      { t: "Fiszkoo w rok podwoiło liczbę użytkowników: z 21 do 43 tys.", ok: true, why: "Oryginalny nagłówek był uczciwy. Liczby tylko go wzmacniają." }
+    ]
+  },
+  {
+    no: "05", title: "Finał", teaser: "Sprawa bez podpowiedzi", trap: "Skrócona oś (w skali 1–5)",
+    guilty: true, stamp: "Przeskalowany", final: true,
+    post: { av: "TN", avc: "var(--red)", org: "TeleNet Plus", meta: "Reklama sponsorowana", headline: "Nasza obsługa deklasuje konkurencję", sub: "Średnia ocena obsługi klienta", foot: ["Reklama", "Sprawdź ofertę w salonie"] },
+    question: "Czy ten wykres przekonuje Cię, że obsługa TeleNet Plus jest dużo lepsza?",
+    view: { min: 4, max: 4.35 }, fixedView: { min: 1, max: 5 }, fixedFlags: { nums: true, ctx: true },
+    draw: (v, f) => barsH({ vals: [4.3, 4.1], labels: ["TeleNet Plus", "Konkurencja"], min: v.min, max: v.max, showVals: f.nums, hlAxis: f.axis, fmtVal: nf, fmtTick: nf, unit: "średnia ocena", barClass: ["", "dim"], aria: "Średnie oceny obsługi" }),
+    context: (f) => f.ctx ? `<div><span class="label">Skala ocen</span><b>od 1 do 5</b></div><div><span class="label">Liczba ankiet</span><b>1200 i 1150</b></div>` : "",
+    tools: [
+      { id: "nums", ic: "12", label: "Pokaż liczby", desc: "Wypisz wartości przy paskach.", run: (S) => { S.flags.nums = true; return "TeleNet Plus: 4,3. Konkurencja: 4,1. Różnica: 0,2 punktu."; } },
+      { id: "axis", ic: "↔", label: "Zbadaj oś", desc: "Sprawdź, od czego zaczyna się skala.", run: (S) => { S.flags.axis = true; return "Oś zaczyna się od 4,0. Widoczne części pasków to 0,3 i 0,1."; } },
+      { id: "ctx", ic: "i", label: "Sprawdź kontekst", desc: "Jaka to skala i ile było ankiet?", run: (S) => { S.flags.ctx = true; return "Ocena w skali od 1 do 5, odpowiednio 1200 i 1150 ankiet."; } },
+      { id: "base", kind: "slider", label: "Przywróć punkt odniesienia", desc: "Przesuń początek osi w stronę początku skali.", prop: "min", from: 4, to: 1, step: 0.05, fmt: (x) => "oś od " + nf(x),
+        done: "Przy osi od 1 (początek skali) paski są prawie równe. Przewaga to 0,2 punktu na 5." }
+    ],
+    verdicts: ["Podane liczby są nieprawdziwe", "Liczby są poprawne, ale sposób prezentacji wyolbrzymia różnicę", "Wykres uzasadnia hasło „deklasuje konkurencję”"],
+    verdictOk: 1,
+    verdictWhy: ["Oceny 4,3 i 4,1 mogą być prawdziwe. Zwodzi rysunek, nie liczby.", "Tak. Ta sama pułapka co w sprawie 01, tylko w innym przebraniu.", "0,2 punktu w skali 1–5 to niewielka przewaga, nie deklasacja."],
+    evidenceOk: 0,
+    evidenceWhy: ["Tak. Oś od 4,0 zamieniła różnicę 0,2 w pasek trzy razy dłuższy.", "To porównanie dwóch firm w jednym okresie. Czas nie gra tu roli.", "Na wykresie nie ma procentów.", "Zbadaj oś: zaczyna się dużo wyżej niż skala."],
+    summary: "Oś zaczynała się od 4,0, więc widoczne części pasków miały długość 0,3 i 0,1, a przewaga wyglądała na trzykrotną. W skali 1–5 różnica wynosi 0,2 punktu. Punktem odniesienia dla takiej skali jest 1, nie 4.",
+    fixes: [
+      { t: "Klienci oceniają nas trzy razy lepiej niż konkurencję", why: "Trzy razy dłuższy był tylko pasek, nie ocena." },
+      { t: "Średnia ocena obsługi: 4,3 wobec 4,1 u konkurencji (skala 1–5)", ok: true, why: "Wartości, skala i uczciwe porównanie." },
+      { t: "Nasza obsługa jest taka sama jak u konkurencji", why: "Różnica 0,2 istnieje. Wystarczy pokazać ją we właściwej skali, nie trzeba jej usuwać." }
+    ]
+  }
+];
+
+const STAGES = [["impression", "Wrażenie"], ["investigate", "Przesłuchanie"], ["verdict", "Werdykt"], ["fix", "Korekta"]];
+const IMP = { yes: "Tak", no: "Nie", more: "Potrzebuję więcej informacji" };
+const CONF = { low: "Niska", mid: "Średnia", high: "Wysoka" };
+
+/* ---------- stan ---------- */
+const S = { screen: "board", ci: 0, c: null, results: CASES.map(() => null) };
+const app = document.getElementById("app");
+let anim = 0;
+
+function caseTotal(r) { return r ? r.v + r.e + r.f : 0; }
+function totalScore() {
+  let t = 0;
+  S.results.forEach((r, i) => { if (!(S.screen === "case" && i === S.ci)) t += caseTotal(r); });
+  if (S.screen === "case" && S.c) t += S.c.pts.v + S.c.pts.e + S.c.pts.f;
+  return t;
+}
+function allClosed() { return S.results.every(Boolean); }
+
+function openCase(i) {
+  const C = CASES[i];
+  S.screen = "case"; S.ci = i;
+  S.c = { stage: "impression", imp: null, conf: null, used: [], notes: [], view: Object.assign({}, C.view), flags: {}, slider: {}, sliderDone: {}, verdict: null, evidence: null, judged: false, fix: null, hint: false, pts: { v: 0, e: 0, f: 0 } };
+  cancelAnimationFrame(anim);
+  render(); window.scrollTo(0, 0);
+}
+function closeCase(next) {
+  const c = S.c;
+  S.results[S.ci] = { imp: c.imp, conf: c.conf, v: c.pts.v, e: c.pts.e, f: c.pts.f };
+  S.c = null;
+  if (next === "report") { S.screen = "report"; render(); window.scrollTo(0, 0); return; }
+  if (next === "next") { const n = CASES.findIndex((_, i) => !S.results[i]); if (n >= 0) return openCase(n); S.screen = "report"; render(); window.scrollTo(0, 0); return; }
+  S.screen = "board"; render(); window.scrollTo(0, 0);
+}
+
+function animateView(target, ms) {
+  const c = S.c; if (!c) return;
+  cancelAnimationFrame(anim);
+  if (reduceMotion) { Object.assign(c.view, target); drawChart(); return; }
+  const from = Object.assign({}, c.view), t0 = performance.now();
+  const step = (now) => {
+    const p = Math.min(1, (now - t0) / ms), e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+    for (const k in target) c.view[k] = from[k] + (target[k] - from[k]) * e;
+    drawChart();
+    if (p < 1) anim = requestAnimationFrame(step);
+  };
+  anim = requestAnimationFrame(step);
+}
+function drawChart() {
+  const C = CASES[S.ci], el = document.getElementById("chart");
+  if (!el || !S.c) return;
+  el.innerHTML = C.draw(S.c.view, S.c.flags);
+  const ctx = document.getElementById("ctx");
+  if (ctx) { const h = C.context ? C.context(S.c.flags) : ""; if (ctx.dataset.h !== h) { ctx.innerHTML = h; ctx.dataset.h = h; } }
+}
+function bumpScore() {
+  const el = document.getElementById("score");
+  if (!el) return;
+  el.querySelector("b").textContent = totalScore();
+  el.classList.add("bump"); setTimeout(() => el.classList.remove("bump"), 900);
+}
+
+/* ---------- widoki ---------- */
+function topBar() {
+  let steps = "";
+  if (S.screen === "case") {
+    const idx = STAGES.findIndex((s) => s[0] === S.c.stage);
+    steps = `<ol class="steps" aria-label="Etapy śledztwa">${STAGES.map((s, i) => `<li class="${i === idx ? "on" : i < idx ? "done" : ""}">${i + 1}. ${s[1]}</li>`).join("")}</ol>`;
+  }
+  return `<header class="top"><div class="wrap">
+    <button class="brand" data-a="board" aria-label="Wróć do akt spraw"><span class="brand-mark">BŚD</span><span><b>Biuro Śledcze Danych</b><small>${S.screen === "case" ? "Akta nr " + CASES[S.ci].no + "/2025" : "Wydział Wykresów"}</small></span></button>
+    ${steps}
+    <div class="score" id="score">punkty <b>${totalScore()}</b>/1000</div>
+  </div></header>`;
+}
+
+function teaserChart(min) {
+  return barsV({ vals: [100, 104], labels: ["I kw.", "II kw."], min, max: min ? 105 : 110, showVals: true, fmtVal: (x) => x, fmtTick: nf, unit: "tys. zł" });
+}
+
+function boardView() {
+  const closed = S.results.filter(Boolean).length;
+  return `<main class="wrap">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Gra detektywistyczna · 5 spraw · ok. 10 minut</div>
+        <h1>Wykres na <em>ławie oskarżonych</em></h1>
+        <p class="lead">Zostań detektywem danych. Każdy wykres to dowód w sprawie. Twoje zadanie: przesłuchać go i ocenić, czy opowiada uczciwą historię.</p>
+        <div class="hero-actions">
+          <button class="btn hl" data-a="open" data-i="${Math.max(0, CASES.findIndex((_, i) => !S.results[i]))}">${closed ? "Prowadź dalej" : "Otwórz pierwszą sprawę"}</button>
+          ${allClosed() ? `<button class="btn ghost" data-a="report">Raport końcowy</button>` : `<span class="muted mono" style="font-size:13px;color:var(--ink-2)">Zamknięte sprawy: ${closed}/5</span>`}
+        </div>
+      </div>
+      <figure class="teaser" aria-label="Te same dane na dwóch wykresach">
+        <span class="pin" aria-hidden="true"></span>
+        <div class="t-title">Te same dane. Inna oś.</div>
+        <div class="teaser-grid">
+          <figure><div class="chart">${teaserChart(98)}</div><figcaption>oś od 98</figcaption></figure>
+          <figure><div class="chart">${teaserChart(0)}</div><figcaption>oś od 0</figcaption></figure>
+        </div>
+        <p class="t-foot">Po lewej sprzedaż „wystrzeliła”. Po prawej wzrosła o 4%. Który wykres mówi prawdę o tej zmianie?</p>
+      </figure>
+    </section>
+    <ol class="procedure" aria-label="Procedura śledztwa">
+      <li><b>Wrażenie</b><span>Oceń dowód na pierwszy rzut oka.</span></li>
+      <li><b>Przesłuchanie</b><span>Użyj narzędzi: liczby, oś, zakres, kontekst.</span></li>
+      <li><b>Werdykt</b><span>Rozstrzygnij sprawę i wskaż dowód.</span></li>
+      <li><b>Korekta</b><span>Wybierz uczciwszy nagłówek.</span></li>
+    </ol>
+    <div class="board-h"><h2>Akta spraw</h2><span class="mono" style="font-size:12px;color:var(--ink-2)">Wszystkie firmy i dane są fikcyjne</span></div>
+    <section class="cases">
+      ${CASES.map((C, i) => {
+        const r = S.results[i];
+        const status = r ? `<span>${caseTotal(r)}/200 pkt</span><span class="mini-stamp ${C.guilty ? "r" : "g"}">${C.stamp}</span>` : `<span>Status: otwarta</span><span>→</span>`;
+        return `<button class="folder ${C.final ? "final" : ""}" data-a="open" data-i="${i}" data-tab="${C.final ? "FINAŁ" : "SPRAWA " + C.no}">
+          <h3>${C.title}</h3><p>${C.teaser}</p>${r ? `<p style="opacity:.8">Pułapka: ${C.trap}</p>` : C.final ? `<p style="opacity:.8">Nowy wykres, brak pytań pomocniczych.</p>` : ""}
+          <div class="f-foot">${status}</div></button>`;
+      }).join("")}
+    </section>
+  </main>`;
+}
+
+function evidenceCard(C) {
+  const p = C.post;
+  return `<article class="evidence" aria-label="Dowód w sprawie">
+    <div class="ev-tag">DOWÓD A-${C.no}</div>
+    <header class="post-h"><span class="avatar" style="--av:${p.avc}">${p.av}</span><div><b>${esc(p.org)}</b><span>${esc(p.meta)}</span></div></header>
+    <h2 class="claim">${esc(p.headline)}</h2>
+    <p class="claim-sub">${esc(p.sub)}</p>
+    <div class="chart" id="chart"></div>
+    <div class="ctx" id="ctx"></div>
+    <footer class="post-f">${p.foot.map((f) => `<span>${esc(f)}</span>`).join("")}</footer>
+    <div class="stamp-layer" id="stamp">${S.c.judged ? stampHTML(C, true) : ""}</div>
+  </article>`;
+}
+function stampHTML(C, still) {
+  return `<div class="stamp ${C.guilty ? "" : "g"}" ${still ? 'style="animation:none"' : ""}>${C.stamp}<small>${C.guilty ? "Werdykt: wyolbrzymienie" : "Werdykt: uczciwy"}</small></div>`;
+}
+
+function panelView() {
+  const C = CASES[S.ci], c = S.c;
+  if (c.stage === "impression") {
+    return `<div class="panel-k">Krok 1 z 4 · Pierwsze wrażenie</div>
+      <h2>Co mówi Ci ten dowód?</h2>
+      <p class="q">${esc(C.question)}</p>
+      <div class="opts" role="group" aria-label="Pierwsze wrażenie">
+        ${Object.keys(IMP).map((k, i) => `<button class="opt ${c.imp === k ? "sel" : ""}" data-a="imp" data-v="${k}" aria-pressed="${c.imp === k}"><span class="k">${"ABC"[i]}</span><span>${IMP[k]}</span></button>`).join("")}
+      </div>
+      <span class="label">Jak bardzo jesteś pewna lub pewny?</span>
+      <div class="chips" role="group" aria-label="Pewność">
+        ${Object.keys(CONF).map((k) => `<button class="chip ${c.conf === k ? "sel" : ""}" data-a="conf" data-v="${k}" aria-pressed="${c.conf === k}">${CONF[k]}</button>`).join("")}
+      </div>
+      <p class="muted">To jeszcze nie jest punktowana odpowiedź. Zapisujemy pierwsze wrażenie, żeby na końcu porównać je z werdyktem.</p>
+      <button class="btn" data-a="to-investigate" ${c.imp && c.conf ? "" : "disabled"}>Zapisz i otwórz skrzynkę narzędzi →</button>`;
+  }
+  if (c.stage === "investigate") {
+    return `<div class="panel-k">Krok 2 z 4 · Przesłuchanie wykresu</div>
+      <h2>Skrzynka narzędzi</h2>
+      <p class="muted">Każde narzędzie sprawdza inny element dowodu. Obserwuj, co dzieje się z wykresem.</p>
+      <div class="tools">${C.tools.map(toolHTML).join("")}</div>
+      ${notesHTML()}
+      ${c.hint ? `<div class="hint"><small>Pytanie pomocnicze</small>${esc(C.hint)}</div>` : ""}
+      <div class="row">
+        <button class="btn" data-a="to-verdict" ${c.used.length ? "" : "disabled"}>Przejdź do werdyktu →</button>
+        ${C.hint && !c.hint ? `<button class="btn ghost sm" data-a="hint">Potrzebuję podpowiedzi</button>` : ""}
+      </div>
+      ${c.used.length ? "" : `<p class="muted" style="margin-top:10px">Użyj co najmniej jednego narzędzia, zanim wydasz werdykt.</p>`}`;
+  }
+  if (c.stage === "verdict") {
+    const j = c.judged;
+    const vOpt = (t, i) => {
+      let cls = c.verdict === i ? "sel" : "";
+      if (j) cls = i === C.verdictOk ? "ok" : c.verdict === i ? "bad" : "";
+      const why = j && (i === C.verdictOk || i === c.verdict) ? `<span class="why">${esc(C.verdictWhy[i])}</span>` : "";
+      return `<button class="opt ${cls}" data-a="verdict" data-v="${i}" ${j ? "disabled" : ""} aria-pressed="${c.verdict === i}"><span class="k">${"ABC"[i]}</span><span>${esc(t)}${why}</span></button>`;
+    };
+    const eOpt = (t, i) => {
+      let cls = c.evidence === i ? "sel" : "";
+      if (j) cls = i === C.evidenceOk ? "ok" : c.evidence === i ? "bad" : "";
+      const why = j && (i === C.evidenceOk || i === c.evidence) ? `<span class="why">${esc(C.evidenceWhy[i])}</span>` : "";
+      return `<button class="opt ${cls}" data-a="evidence" data-v="${i}" ${j ? "disabled" : ""} aria-pressed="${c.evidence === i}"><span class="k">${i + 1}</span><span>${esc(t)}${why}</span></button>`;
+    };
+    return `<div class="panel-k">Krok 3 z 4 · Werdykt</div>
+      <h2>${j ? "Sprawa rozstrzygnięta" : "Wydaj werdykt"}</h2>
+      <span class="label">Rozstrzygnięcie</span>
+      <div class="opts">${C.verdicts.map(vOpt).join("")}</div>
+      <span class="label">Kluczowy dowód</span>
+      <div class="opts">${EVIDENCE.map(eOpt).join("")}</div>
+      ${j ? `<div class="pts"><span class="${c.pts.v ? "y" : "n"}">werdykt ${c.pts.v ? "+100" : "+0"}</span><span class="${c.pts.e ? "y" : "n"}">dowód ${c.pts.e ? "+50" : "+0"}</span></div>
+        <div class="report-box"><span class="label">Raport z przesłuchania</span><p>${esc(C.summary)}</p></div>
+        <button class="btn" data-a="to-fix">${C.guilty ? "Napraw przekaz →" : "Oceń nagłówek →"}</button>`
+      : `<button class="btn" data-a="judge" ${c.verdict !== null && c.evidence !== null ? "" : "disabled"}>Wydaj werdykt</button>`}`;
+  }
+  // fix
+  const done = c.fix !== null;
+  const fOpt = (o, i) => {
+    let cls = "";
+    if (done) cls = o.ok ? "ok" : c.fix === i ? "bad" : "";
+    const why = done && (o.ok || c.fix === i) ? `<span class="why">${esc(o.why)}</span>` : "";
+    return `<button class="opt ${cls}" data-a="fix" data-v="${i}" ${done ? "disabled" : ""}><span class="k">${"ABC"[i]}</span><span>${esc(o.t)}${why}</span></button>`;
+  };
+  const left = CASES.filter((_, i) => i !== S.ci && !S.results[i]).length;
+  return `<div class="panel-k">Krok 4 z 4 · Korekta przekazu</div>
+    <h2>${C.fixKicker || "Wybierz uczciwszy nagłówek"}</h2>
+    <p class="muted">Detektyw nie tylko wykrywa problem. Umie też przedstawić dane lepiej.</p>
+    <div class="opts">${C.fixes.map(fOpt).join("")}</div>
+    ${done ? `<div class="pts"><span class="${c.pts.f ? "y" : "n"}">korekta ${c.pts.f ? "+50" : "+0"}</span><span>sprawa: ${c.pts.v + c.pts.e + c.pts.f}/200</span></div>
+      <div class="row">
+        ${left ? `<button class="btn" data-a="close" data-next="next">Zamknij sprawę i otwórz następną →</button>` : `<button class="btn hl" data-a="close" data-next="report">Zamknij sprawę i zobacz raport →</button>`}
+        <button class="btn ghost sm" data-a="close" data-next="board">Wróć do akt</button>
+      </div>` : ""}`;
+}
+
+function toolHTML(t) {
+  const c = S.c, used = c.used.includes(t.id);
+  if (t.kind === "slider") {
+    const val = c.slider[t.id] != null ? c.slider[t.id] : t.from;
+    const lo = Math.min(t.from, t.to), hi = Math.max(t.from, t.to);
+    return `<div class="slider-tool">
+      <div class="top-row"><b>${esc(t.label)}</b><output id="out-${t.id}" for="sl-${t.id}">${esc(t.fmt(val))}</output></div>
+      <span class="d">${esc(t.desc)}</span>
+      <input type="range" id="sl-${t.id}" data-tool="${t.id}" min="${lo}" max="${hi}" step="${t.step}" value="${val}" ${t.from > t.to ? 'style="direction:rtl"' : ""} aria-label="${esc(t.label)}">
+      <div class="ends"><span>${nf(t.from)}</span><span>${nf(t.to)}</span></div>
+    </div>`;
+  }
+  return `<button class="tool ${used ? "used" : ""}" data-a="tool" data-id="${t.id}"><span class="ic" aria-hidden="true">${t.ic}</span><span><b>${esc(t.label)}</b><span>${esc(t.desc)}</span></span><span class="st">${used ? "✓ sprawdzone" : "użyj"}</span></button>`;
+}
+function notesHTML() {
+  const n = S.c.notes;
+  return `<div class="notes" id="notes"><span class="label">Notatnik detektywa</span>${n.length ? `<ol>${n.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : `<p class="empty">Na razie pusto. Użyj narzędzia, a ustalenia pojawią się tutaj.</p>`}</div>`;
+}
+
+function compareView() {
+  const C = CASES[S.ci], c = S.c;
+  if (c.stage !== "fix" || c.fix === null) return "";
+  const good = C.fixes.find((f) => f.ok);
+  const ctxAfter = C.context ? C.context(C.fixedFlags) : "";
+  return `<section class="compare wrap" id="compare">
+    <h2>Przed i po</h2>
+    <p>Te same liczby, inny przekaz.</p>
+    <div class="compare-grid">
+      <div class="cmp ${C.guilty ? "before" : ""}"><span class="label">${C.guilty ? "Przed" : "Oryginał"}</span><h3>${esc(C.post.headline)}</h3><div class="chart">${C.draw(C.view, {})}</div></div>
+      <div class="cmp after"><span class="label">${C.guilty ? "Po korekcie" : "Z liczbami"}</span><h3>${esc(good.t)}</h3><div class="chart">${C.draw(C.fixedView, C.fixedFlags)}</div>${ctxAfter ? `<div class="ctx">${ctxAfter}</div>` : ""}</div>
+    </div>
+  </section>`;
+}
+
+function caseView() {
+  const C = CASES[S.ci];
+  return `<main>
+    <div class="wrap case-head">
+      <div><div class="eyebrow">${C.final ? "Sprawa finałowa · bez podpowiedzi" : "Sprawa " + C.no + " z 05"}</div><h1>${esc(C.title)}</h1></div>
+      <button class="btn ghost sm" data-a="board">← Akta spraw</button>
+    </div>
+    <div class="wrap case-grid">
+      ${evidenceCard(C)}
+      <section class="panel" id="panel" aria-live="polite">${panelView()}</section>
+    </div>
+    <div id="compare-slot">${compareView()}</div>
+  </main>`;
+}
+
+function rankFor(score) {
+  if (score >= 900) return ["Komisarz danych", "Żaden wykres nie przejdzie obok Ciebie niezauważony."];
+  if (score >= 700) return ["Inspektor", "Wyłapujesz większość pułapek. Jeszcze kilka spraw i awans."];
+  if (score >= 400) return ["Detektyw", "Masz już nawyk przesłuchiwania wykresów. Ćwicz dalej."];
+  return ["Aspirant", "Każdy detektyw od czegoś zaczynał. Zagraj jeszcze raz."];
+}
+function reportView() {
+  const score = S.results.reduce((a, r) => a + caseTotal(r), 0);
+  const [rank, line] = rankFor(score);
+  const guiltyIdx = CASES.map((C, i) => (C.guilty ? i : -1)).filter((i) => i >= 0);
+  const fooled = guiltyIdx.filter((i) => S.results[i] && S.results[i].imp === "yes").length;
+  const confidentWrong = S.results.filter((r, i) => r && r.conf === "high" && ((CASES[i].guilty && r.imp === "yes") || (!CASES[i].guilty && r.imp === "no"))).length;
+  const verdictOk = S.results.filter((r) => r && r.v).length;
+  return `<main class="wrap">
+    <section class="final-hero">
+      <div>
+        <div class="eyebrow">Raport końcowy · Biuro Śledcze Danych</div>
+        <h1>Śledztwo zamknięte</h1>
+        <div class="big-score"><b>${score}</b> / 1000 punktów</div>
+        <p style="font-size:17px;color:var(--ink-2);margin:8px 0 0;max-width:52ch">${line}</p>
+      </div>
+      <div class="stamp rank-stamp ${score >= 700 ? "g" : ""}">${rank}<small>Stopień służbowy</small></div>
+    </section>
+    <section class="insights">
+      <div class="insight"><b>${fooled} z ${guiltyIdx.length}</b><p>Tyle zmanipulowanych wykresów przekonało Cię na pierwszy rzut oka.</p></div>
+      <div class="insight"><b>${verdictOk} z 5</b><p>Tyle trafnych werdyktów po przesłuchaniu wykresu.</p></div>
+      <div class="insight"><b>${confidentWrong}</b><p>Tyle razy pierwsze wrażenie było mylne mimo wysokiej pewności.</p></div>
+    </section>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Sprawa</th><th>Pierwsze wrażenie</th><th>Pułapka</th><th>Werdykt</th><th>Dowód</th><th>Korekta</th><th>Punkty</th></tr></thead>
+      <tbody>${CASES.map((C, i) => {
+        const r = S.results[i];
+        return `<tr><td><b>${C.no}</b> ${esc(C.title)}</td><td>${IMP[r.imp]} <span style="color:var(--ink-2)">(pewność: ${CONF[r.conf].toLowerCase()})</span></td><td>${esc(C.trap)}</td>
+          <td class="${r.v ? "y" : "n"}">${r.v ? "trafny" : "chybiony"}</td><td class="${r.e ? "y" : "n"}">${r.e ? "tak" : "nie"}</td><td class="${r.f ? "y" : "n"}">${r.f ? "tak" : "nie"}</td><td class="num">${caseTotal(r)}/200</td></tr>`;
+      }).join("")}</tbody>
+    </table></div>
+    <section class="questions">
+      <h2>Cztery pytania detektywa</h2>
+      <ul>
+        <li><b>Oś</b>Od jakiej wartości zaczyna się oś i jaki jest naturalny punkt odniesienia?</li>
+        <li><b>Czas</b>Jaki okres pokazano, a jaki pominięto?</li>
+        <li><b>Kontekst</b>Procent czego? Ile wynosi punkt odniesienia?</li>
+        <li><b>Wniosek</b>Czy nagłówek mówi to samo co liczby, ani więcej, ani mniej?</li>
+      </ul>
+    </section>
+    <div class="row" style="padding-bottom:64px"><button class="btn hl" data-a="restart">Zagraj jeszcze raz</button><button class="btn ghost" data-a="board">Wróć do akt</button></div>
+  </main>`;
+}
+
+function render() {
+  app.innerHTML = topBar() + (S.screen === "board" ? boardView() : S.screen === "case" ? caseView() : reportView());
+  if (S.screen === "case") drawChart();
+}
+function renderPanel() {
+  const p = document.getElementById("panel");
+  if (p) p.innerHTML = panelView();
+  const top = app.querySelector(".top");
+  if (top) top.outerHTML = topBar();
+  const slot = document.getElementById("compare-slot");
+  if (slot) slot.innerHTML = compareView();
+}
+
+/* ---------- obsługa zdarzeń ---------- */
+app.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-a]");
+  if (!b || b.disabled) return;
+  const a = b.dataset.a, c = S.c, C = CASES[S.ci];
+  switch (a) {
+    case "board": cancelAnimationFrame(anim); S.screen = "board"; S.c = null; render(); window.scrollTo(0, 0); break;
+    case "open": openCase(+b.dataset.i); break;
+    case "report": S.screen = "report"; render(); window.scrollTo(0, 0); break;
+    case "restart": S.results = CASES.map(() => null); openCase(0); break;
+    case "imp": c.imp = b.dataset.v; renderPanel(); break;
+    case "conf": c.conf = b.dataset.v; renderPanel(); break;
+    case "to-investigate": c.stage = "investigate"; renderPanel(); break;
+    case "tool": {
+      const t = C.tools.find((x) => x.id === b.dataset.id);
+      const note = t.run(S.c);
+      if (!c.used.includes(t.id)) { c.used.push(t.id); if (note) c.notes.push(note); }
+      renderPanel(); drawChart();
+      break;
+    }
+    case "hint": c.hint = true; renderPanel(); break;
+    case "to-verdict": c.stage = "verdict"; renderPanel(); break;
+    case "verdict": c.verdict = +b.dataset.v; renderPanel(); break;
+    case "evidence": c.evidence = +b.dataset.v; renderPanel(); break;
+    case "judge": {
+      c.judged = true;
+      c.pts.v = c.verdict === C.verdictOk ? 100 : 0;
+      c.pts.e = c.evidence === C.evidenceOk ? 50 : 0;
+      renderPanel(); bumpScore();
+      const st = document.getElementById("stamp");
+      if (st) st.innerHTML = stampHTML(C, false);
+      if (window.innerWidth < 900) document.querySelector(".evidence").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      break;
+    }
+    case "to-fix": c.stage = "fix"; renderPanel(); break;
+    case "fix": {
+      const i = +b.dataset.v;
+      c.fix = i; c.pts.f = C.fixes[i].ok ? 50 : 0;
+      renderPanel(); bumpScore();
+      const cmp = document.getElementById("compare");
+      if (cmp) setTimeout(() => cmp.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }), 250);
+      break;
+    }
+    case "close": closeCase(b.dataset.next); break;
+  }
+});
+app.addEventListener("input", (e) => {
+  const el = e.target;
+  if (!el.dataset || !el.dataset.tool || !S.c) return;
+  const C = CASES[S.ci], c = S.c, t = C.tools.find((x) => x.id === el.dataset.tool), v = +el.value;
+  c.slider[t.id] = v;
+  const out = document.getElementById("out-" + t.id);
+  if (out) out.textContent = t.fmt(v);
+  if (t.apply) t.apply(c, v); else { c.view[t.prop] = v; drawChart(); }
+  let changed = false;
+  if (!c.used.includes(t.id)) { c.used.push(t.id); changed = true; }
+  if (v === t.to && !c.sliderDone[t.id]) { c.sliderDone[t.id] = true; c.notes.push(t.done); changed = true; }
+  if (changed) {
+    const notes = document.getElementById("notes");
+    if (notes) notes.outerHTML = notesHTML();
+    const btn = app.querySelector('[data-a="to-verdict"]');
+    if (btn) btn.disabled = false;
+    const help = btn && btn.parentElement.nextElementSibling;
+    if (help && help.classList.contains("muted")) help.remove();
+  }
+});
+
+render();
+})();
+</script>
+</body>
+</html>
